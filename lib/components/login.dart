@@ -1,369 +1,297 @@
-// import 'package:flutter/material.dart';
-
-// class LoginPage extends StatefulWidget {
-//   const LoginPage({super.key});
-
-//   @override
-//   State<LoginPage> createState() => _LoginPageState();
-// }
-
-// class _LoginPageState extends State<LoginPage> {
-
-//   bool isAmharic = false;
-
-//   // Text helper
-//   String t(String en, String am) {
-//     return isAmharic ? am : en;
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-//       body: SafeArea(
-//         child: Padding(
-//           padding: const EdgeInsets.all(24),
-//           child: Column(
-//             mainAxisAlignment: MainAxisAlignment.center,
-//             crossAxisAlignment: CrossAxisAlignment.stretch,
-//             children: [
-
-//               // Language Switch
-//               Row(
-//                 mainAxisAlignment: MainAxisAlignment.end,
-//                 children: [
-//                   Text(
-//                     isAmharic ? "አማ" : "EN",
-//                     style: const TextStyle(
-//                       fontWeight: FontWeight.bold,
-//                     ),
-//                   ),
-//                   Switch(
-//                     activeColor: const Color(0xFF3A4A41),
-//                     value: isAmharic,
-//                     onChanged: (value) {
-//                       setState(() {
-//                         isAmharic = value;
-//                       });
-//                     },
-//                   ),
-//                 ],
-//               ),
-
-//               const SizedBox(height: 20),
-
-//               // Logo
-//               Center(
-//                 child: Column(
-//                   children: [
-//                     const Icon(
-//                       Icons.eco,
-//                       size: 70,
-//                       color: Color(0xFF3A4A41),
-//                     ),
-//                     const SizedBox(height: 10),
-//                     Text(
-//                       "RecycleX",
-//                       style: const TextStyle(
-//                         fontSize: 28,
-//                         fontWeight: FontWeight.bold,
-//                         color: Color(0xFF3A4A41),
-//                       ),
-//                     ),
-//                     const SizedBox(height: 6),
-//                     Text(
-//                       t(
-//                         "Turning Waste into Value",
-//                         "ቆሻሻን ወደ ዋጋ መቀየር",
-//                       ),
-//                       style: const TextStyle(
-//                         fontSize: 14,
-//                         color: Color(0xFF6B7B6F),
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-
-//               const SizedBox(height: 40),
-
-//               // Phone
-//               TextField(
-//                 keyboardType: TextInputType.phone,
-//                 decoration: InputDecoration(
-//                   labelText: t("Phone Number", "ስልክ ቁጥር"),
-//                   prefixIcon: const Icon(Icons.phone),
-//                   filled: true,
-//                   fillColor: Colors.white,
-//                   border: OutlineInputBorder(
-//                     borderRadius: BorderRadius.circular(14),
-//                     borderSide: BorderSide.none,
-//                   ),
-//                 ),
-//               ),
-
-//               const SizedBox(height: 16),
-
-//               // Password
-//               TextField(
-//                 obscureText: true,
-//                 decoration: InputDecoration(
-//                   labelText: t("Password", "የይለፍ ቃል"),
-//                   prefixIcon: const Icon(Icons.lock),
-//                   filled: true,
-//                   fillColor: Colors.white,
-//                   border: OutlineInputBorder(
-//                     borderRadius: BorderRadius.circular(14),
-//                     borderSide: BorderSide.none,
-//                   ),
-//                 ),
-//               ),
-
-//               const SizedBox(height: 30),
-
-//               // Login Button
-//               ElevatedButton(
-//                 onPressed: () {},
-//                 style: ElevatedButton.styleFrom(
-//                   backgroundColor: const Color(0xFF3A4A41),
-//                   padding: const EdgeInsets.symmetric(vertical: 16),
-//                   shape: RoundedRectangleBorder(
-//                     borderRadius: BorderRadius.circular(20),
-//                   ),
-//                 ),
-//                 child: Text(
-//                   t("Login", "ግባ"),
-//                   style: const TextStyle(fontSize: 18, color: Colors.white),
-//                 ),
-//               ),
-
-//               const SizedBox(height: 16),
-
-//               // Guest
-//               TextButton(
-//                 onPressed: () {},
-//                 child: Text(
-//                   t("Continue without login", "ያለ መግባት ቀጥል"),
-//                   style: const TextStyle(
-//                     color: Color(0xFF3A4A41),
-//                     fontSize: 16,
-//                   ),
-//                 ),
-//               ),
-
-//               const SizedBox(height: 20),
-
-//               // Register
-//               Row(
-//                 mainAxisAlignment: MainAxisAlignment.center,
-//                 children: [
-//                   Text(t("Don’t have an account? ", "መለያ የለዎትም? ")),
-//                   GestureDetector(
-//                     onTap: () {},
-//                     child: Text(
-//                       t("Register", "ይመዝገቡ"),
-//                       style: const TextStyle(
-//                         color: Color(0xFF3A4A41),
-//                         fontWeight: FontWeight.bold,
-//                       ),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-
-
-
-// import 'package:flutter/material.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'HomePage.dart';
-
-// class LoginPage extends StatefulWidget {
-//   const LoginPage({super.key});
-
-//   @override
-//   State<LoginPage> createState() => _LoginPageState();
-// }
-
-// class _LoginPageState extends State<LoginPage> {
-
-//   final emailController = TextEditingController();
-//   final passwordController = TextEditingController();
-
-//   bool isLogin = true;
-//   bool isAmharic = false;
-
-//   String t(String en, String am) => isAmharic ? am : en;
-
-//   Future<void> authenticate() async {
-//     try {
-//       if (isLogin) {
-//         await FirebaseAuth.instance.signInWithEmailAndPassword(
-//           email: emailController.text,
-//           password: passwordController.text,
-//         );
-//       } else {
-//         await FirebaseAuth.instance.createUserWithEmailAndPassword(
-//           email: emailController.text,
-//           password: passwordController.text,
-//         );
-//       }
-
-//       Navigator.pushReplacement(
-//         context,
-//         MaterialPageRoute(builder: (_) => const HomePage()),
-//       );
-//     } catch (e) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(content: Text(e.toString())),
-//       );
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor:  Colors.white,
-//       body: Padding(
-//         padding: const EdgeInsets.all(20),
-//         child: Column(
-//           // mainAxisAlignment: MainAxisAlignment.center,
-//           children: [
-//             const SizedBox(height: 24),
-
-//             // Language Switch
-//             Row(
-//               mainAxisAlignment: MainAxisAlignment.end,
-//               children: [
-//                 Text(isAmharic ? "አማ" : "EN"),
-//                 Switch(
-//                   value: isAmharic,
-//                   onChanged: (v) => setState(() => isAmharic = v),
-//                 )
-//               ],
-//             ),
-//             const SizedBox(height: 94),
-
-//             const Icon(Icons.eco, size: 80, color: Color(0xFF3A4A41)),
-//             const SizedBox(height: 20),
-
-//             TextField(
-//               controller: emailController,
-//               decoration: InputDecoration(
-//                 labelText: t("Email", "ኢሜይል"),
-//                 border: OutlineInputBorder(
-//                   borderRadius: BorderRadius.circular(16),
-//                 ),
-//               ),
-//             ),
-
-//             const SizedBox(height: 16),
-
-//             TextField(
-//               controller: passwordController,
-//               obscureText: true,
-//               decoration: InputDecoration(
-//                 labelText: t("Password", "የይለፍ ቃል"),
-//                 border: OutlineInputBorder(
-//                   borderRadius: BorderRadius.circular(16),
-//                 ),
-//               ),
-//             ),
-
-//             const SizedBox(height: 24),
-
-//             ElevatedButton(
-//               onPressed: authenticate,
-//               style: ElevatedButton.styleFrom(
-//                 backgroundColor: const Color.fromARGB(255, 146, 228, 182),
-//                 padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 80),
-//                 shape: RoundedRectangleBorder(
-//                   borderRadius: BorderRadius.circular(20),
-//                 ),
-//               ),
-//               child: Text(
-//                 isLogin
-//                     ? t("Login", "ግባ")
-//                     : t("Register", "ተመዝገብ"),
-//               ),
-//             ),
-
-//             TextButton(
-//               onPressed: () => setState(() => isLogin = !isLogin),
-//               child: Text(
-//                 isLogin
-//                     ? t("Create account", "አዲስ መለያ ፍጠር")
-//                     : t("Already have account?", "መለያ አለዎት?"),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
 
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'HomePage.dart';
+import 'signup.dart'; 
 
-class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
+class RecycleLoginPage extends StatefulWidget {
+  const RecycleLoginPage({super.key});
+
+  @override
+  State<RecycleLoginPage> createState() => _RecycleLoginPageState();
+}
+
+class _RecycleLoginPageState extends State<RecycleLoginPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  bool _passwordVisible = false;
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: "1050799114152-lhjk3rv77sjppuc4nhrqe0pahqhknira.apps.googleusercontent.com",
+    scopes: ['email'],
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    // Check if user is already logged in
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkCurrentUser();
+    });
+  }
+
+  void _checkCurrentUser() {
+    final user = _auth.currentUser;
+    if (user != null) {
+      // User is already logged in, navigate to home
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => RecycleXHome()),
+      );
+    }
+  }
+
+  // --------- EMAIL/PASSWORD LOGIN ---------
+  void _login() async {
+    if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
+      setState(() => _isLoading = true);
+      try {
+        await _auth.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => RecycleXHome()),
+        );
+      } on FirebaseAuthException catch (e) {
+        String message = '';
+        if (e.code == 'user-not-found') {
+          message = 'No user found for that email.';
+        } else if (e.code == 'wrong-password') {
+          message = 'Wrong password provided.';
+        } else {
+          message = e.message ?? 'Login failed';
+        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter email and password')),
+      );
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        if (mounted) setState(() => _isLoading = false);
+        return; // user cancelled
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await _auth.signInWithCredential(credential);
+      if (!mounted) return;
+      
+      // Navigate to home page
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => RecycleXHome()),
+      );
+      
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Google Sign-In failed: ${e.toString()}")),
+        );
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F4ED),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-
-              const Icon(Icons.recycling,
-                  size: 80, color: Colors.green),
-
-              const SizedBox(height: 20),
-
-              const Text(
-                "RecycleX",
-                style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 30),
-
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 50),
+                // APP TITLE
+                Text(
+                  "RecycleX",
+                  style: TextStyle(
+                    color: Colors.green[700],
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                icon: Image.asset(
-                  "assets/google.png",
-                  height: 24,
+                const SizedBox(height: 10),
+                Text(
+                  "Recycle for a better planet 🌎",
+                  style: TextStyle(
+                    color: Colors.green[400],
+                    fontSize: 16,
+                  ),
                 ),
-                label: const Text("Continue with Google"),
-                onPressed: () async {
-                  await AuthService.signInWithGoogle();
-                },
-              ),
-            ],
+                const SizedBox(height: 40),
+
+                // LOGIN FORM
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          hintText: "Email address",
+                          contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.green[700]!, width: 2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: !_passwordVisible,
+                        decoration: InputDecoration(
+                          hintText: "Password",
+                          contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.green[700]!, width: 2),
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                              color: Colors.grey[600],
+                            ),
+                            onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green[700],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : const Text("Log In", style: TextStyle(fontSize: 18)),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _isLoading ? null : () {},
+                        child: Text(
+                          "Forgot Password?",
+                          style: TextStyle(color: Colors.green[700]),
+                        ),
+                      ),
+                      const Divider(height: 30),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton.icon(
+                          onPressed: _isLoading ? null : _signInWithGoogle,
+                          icon: Image.network(
+                            'https://cdn-icons-png.flaticon.com/512/2991/2991148.png',
+                            height: 24,
+                          ),
+                          label: const Text("Continue with Google"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                            side: BorderSide(color: Colors.grey[300]!),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : () {
+                            // Navigate to signup page
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => SignUpPage()),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green[400],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text("Create New Account", style: TextStyle(fontSize: 16)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 }
+
+
+
+
+
+
+
+
+
+
