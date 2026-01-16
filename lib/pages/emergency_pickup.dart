@@ -1,137 +1,6 @@
-// import 'package:flutter/material.dart';
-
-// class EmergencyPickupPage extends StatelessWidget {
-//   const EmergencyPickupPage({Key? key}) : super(key: key);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: Colors.red[50],
-//       appBar: AppBar(
-//         title: Text('Emergency Pickup'),
-//         backgroundColor: Colors.red,
-//         foregroundColor: Colors.white,
-//       ),
-//       body: Padding(
-//         padding: EdgeInsets.all(24),
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: [
-//             Icon(
-//               Icons.emergency,
-//               size: 80,
-//               color: Colors.red,
-//             ),
-//             SizedBox(height: 24),
-//             Text(
-//               'URGENT PICKUP REQUEST',
-//               style: TextStyle(
-//                 fontSize: 24,
-//                 fontWeight: FontWeight.bold,
-//                 color: Colors.red,
-//               ),
-//             ),
-//             SizedBox(height: 16),
-//             Text(
-//               'Use this feature only for emergency waste situations. '
-//               'A collector will be dispatched immediately with priority service.',
-//               textAlign: TextAlign.center,
-//               style: TextStyle(fontSize: 16),
-//             ),
-//             SizedBox(height: 32),
-            
-//             // Emergency Details
-//             Card(
-//               child: Padding(
-//                 padding: EdgeInsets.all(16),
-//                 child: Column(
-//                   children: [
-//                     ListTile(
-//                       leading: Icon(Icons.warning, color: Colors.orange),
-//                       title: Text('Priority Service'),
-//                       subtitle: Text('Collector within 30 minutes'),
-//                     ),
-//                     ListTile(
-//                       leading: Icon(Icons.attach_money, color: Colors.orange),
-//                       title: Text('Double EcoCoins'),
-//                       subtitle: Text('250 EcoCoins will be charged'),
-//                     ),
-//                     ListTile(
-//                       leading: Icon(Icons.support_agent, color: Colors.orange),
-//                       title: Text('24/7 Support'),
-//                       subtitle: Text('Immediate customer support'),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//             SizedBox(height: 32),
-            
-//             // Emergency Button
-//             SizedBox(
-//               width: double.infinity,
-//               child: ElevatedButton.icon(
-//                 onPressed: () {
-//                   _showConfirmationDialog(context);
-//                 },
-//                 icon: Icon(Icons.emergency),
-//                 label: Text('REQUEST EMERGENCY PICKUP'),
-//                 style: ElevatedButton.styleFrom(
-//                   backgroundColor: Colors.red,
-//                   padding: EdgeInsets.symmetric(vertical: 18),
-//                 ),
-//               ),
-//             ),
-//             SizedBox(height: 16),
-//             TextButton(
-//               onPressed: () => Navigator.pop(context),
-//               child: Text('Cancel'),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   void _showConfirmationDialog(BuildContext context) {
-//     showDialog(
-//       context: context,
-//       builder: (context) => AlertDialog(
-//         title: Text('Confirm Emergency Request'),
-//         content: Text(
-//           'Are you sure you want to request an emergency pickup? '
-//           'This will cost 250 EcoCoins and a collector will be dispatched immediately.',
-//         ),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(context),
-//             child: Text('Cancel'),
-//           ),
-//           ElevatedButton(
-//             onPressed: () {
-//               Navigator.pop(context); // Close dialog
-//               Navigator.pop(context); // Go back to home
-//               ScaffoldMessenger.of(context).showSnackBar(
-//                 SnackBar(
-//                   content: Text('Emergency pickup requested!'),
-//                   backgroundColor: Colors.red,
-//                 ),
-//               );
-//             },
-//             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-//             child: Text('Confirm'),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-
-
-
 
 import 'package:flutter/material.dart';
+import '../services/firebase_service.dart';
 
 class EmergencyPickupPage extends StatefulWidget {
   const EmergencyPickupPage({Key? key}) : super(key: key);
@@ -142,8 +11,13 @@ class EmergencyPickupPage extends StatefulWidget {
 
 class _EmergencyPickupPageState extends State<EmergencyPickupPage> {
   final TextEditingController _reasonController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  
   String? _selectedWasteType;
-  bool _isConfirming = false;
+  bool _isLoading = false;
+  final int _emergencyCost = 50;
 
   final List<String> _wasteTypes = [
     'Medical Waste',
@@ -154,294 +28,487 @@ class _EmergencyPickupPageState extends State<EmergencyPickupPage> {
     'Other'
   ];
 
+  // Form key for validation
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.red[50],
-      appBar: AppBar(
-        title: Text('Emergency Pickup'),
-        backgroundColor: Colors.red,
-        foregroundColor: Colors.white,
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(20),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.emergency,
-                size: 80,
-                color: Colors.red,
-              ),
-              SizedBox(height: 16),
-              Text(
-                'URGENT PICKUP REQUEST',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Use this feature only for emergency waste situations. '
-                'A collector will be dispatched within 30 minutes.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-              ),
-              SizedBox(height: 24),
-
-              // Emergency Form
-              Card(
-                elevation: 3,
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Emergency Details',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red,
-                        ),
-                      ),
-                      SizedBox(height: 16),
-
-                      // Waste Type Dropdown
-                      DropdownButtonFormField<String>(
-                        value: _selectedWasteType,
-                        decoration: InputDecoration(
-                          labelText: 'Type of Emergency Waste',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.warning),
-                        ),
-                        items: _wasteTypes.map((type) {
-                          return DropdownMenuItem(
-                            value: type,
-                            child: Text(type),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedWasteType = value;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select waste type';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 16),
-
-                      // Reason Text Field
-                      TextFormField(
-                        controller: _reasonController,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          labelText: 'Emergency Reason (Required)',
-                          hintText: 'Explain why this is an emergency...',
-                          border: OutlineInputBorder(),
-                          alignLabelWithHint: true,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please provide a reason';
-                          }
-                          if (value.length < 10) {
-                            return 'Please provide more details (min 10 chars)';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Note: Emergency pickup costs 50 EcoCoins',
-                        style: TextStyle(
-                          color: Colors.orange[800],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 16),
-
-              // Emergency Details
-              Card(
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      ListTile(
-                        leading: Icon(Icons.access_time, color: Colors.red),
-                        title: Text('30-Minute Response'),
-                        subtitle: Text('Collector will arrive within 30 mins'),
-                      ),
-                      ListTile(
-                        leading: Icon(Icons.attach_money, color: Colors.green),
-                        title: Text('Cost: 50 EcoCoins'),
-                        subtitle: Text('Will be deducted from your wallet'),
-                      ),
-                      ListTile(
-                        leading: Icon(Icons.support_agent, color: Colors.blue),
-                        title: Text('Priority Support'),
-                        subtitle: Text('Dedicated customer service'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 24),
-
-              // Emergency Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _isFormValid() ? () {
-                    _showConfirmationDialog(context);
-                  } : null,
-                  icon: Icon(Icons.emergency),
-                  label: Text(
-                    _isConfirming ? 'PROCESSING...' : 'REQUEST EMERGENCY PICKUP',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: 18),
-                    disabledBackgroundColor: Colors.grey,
-                  ),
-                ),
-              ),
-              SizedBox(height: 12),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Cancel', style: TextStyle(fontSize: 16)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  void initState() {
+    super.initState();
+    // Fill with sample data
+    _nameController.text = 'John Doe';
+    _phoneController.text = '+251911234567';
+    _addressController.text = 'Addis Ababa, Ethiopia';
   }
 
   bool _isFormValid() {
-    return _selectedWasteType != null && 
-           _selectedWasteType!.isNotEmpty && 
-           _reasonController.text.isNotEmpty &&
-           _reasonController.text.length >= 10 &&
-           !_isConfirming;
+    return _selectedWasteType != null &&
+        _reasonController.text.isNotEmpty &&
+        _addressController.text.isNotEmpty &&
+        _phoneController.text.isNotEmpty &&
+        _nameController.text.isNotEmpty;
   }
 
-  void _showConfirmationDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.warning, color: Colors.orange),
-            SizedBox(width: 10),
-            Text('Confirm Emergency Request'),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Please confirm your emergency pickup details:'),
-              SizedBox(height: 16),
-              Text('• Waste Type: $_selectedWasteType'),
-              SizedBox(height: 8),
-              Text('• Reason: ${_reasonController.text}'),
-              SizedBox(height: 8),
-              Text('• Cost: 50 EcoCoins'),
-              SizedBox(height: 16),
-              Text(
-                'A collector will be dispatched within 30 minutes. '
-                '50 EcoCoins will be deducted from your wallet.',
-                style: TextStyle(color: Colors.grey[700]),
+  Future<void> _submitEmergencyRequest() async {
+    print('_submitEmergencyRequest called');
+    if (!_isFormValid() || _isLoading) {
+      print('Form not valid or loading');
+      return;
+    }
+
+    // Validate form
+    if (_formKey.currentState?.validate() ?? false) {
+      print('Form validated, setting loading to true');
+      setState(() => _isLoading = true);
+
+      try {
+        print('Saving to Firebase...');
+        // Save to Firebase
+        await FirebaseService.saveEmergencyPickup(
+          wasteType: _selectedWasteType!,
+          reason: _reasonController.text,
+          address: _addressController.text,
+          latitude: 9.0054,
+          longitude: 38.7636,
+          ecoCoins: _emergencyCost,
+          phone: _phoneController.text,
+          userName: _nameController.text,
+          userEmail: 'user@example.com',
+        );
+
+        print('Firebase save successful, showing success dialog');
+        // Show success dialog
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Success!', style: TextStyle(color: Colors.green)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Emergency pickup request submitted successfully.'),
+                const SizedBox(height: 10),
+                Text('Cost: $_emergencyCost EcoCoins', style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 10),
+                const Text('Your data has been stored securely in Firebase Database.'),
+                const SizedBox(height: 10),
+                const Text('Our team will contact you shortly for pickup arrangements.'),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  print('OK button pressed');
+                  Navigator.pop(context);
+                },
+                child: const Text('OK', style: TextStyle(color: Colors.green)),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+        );
+        
+        print('Clearing form');
+        // Clear form
+        _reasonController.clear();
+        setState(() {
+          _selectedWasteType = null;
+        });
+        
+      } catch (e) {
+        print('Error occurred: $e');
+        // Show error dialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Error', style: TextStyle(color: Colors.red)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Failed to submit request.'),
+                const SizedBox(height: 10),
+                Text('Error: ${e.toString()}', style: TextStyle(color: Colors.grey[600])),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  print('Error OK button pressed');
+                  Navigator.pop(context);
+                },
+                child: const Text('OK'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context); // Close dialog
-              await _processEmergencyRequest(context);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('Confirm & Pay 50 Coins'),
-          ),
-        ],
-      ),
-    );
+        );
+      } finally {
+        print('Setting loading to false');
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
-  Future<void> _processEmergencyRequest(BuildContext context) async {
-    setState(() {
-      _isConfirming = true;
-    });
+  Future<void> _showConfirmationDialog() async {
+    print('_showConfirmationDialog called');
+    
+    if (!_isFormValid() || _isLoading) {
+      print('Form not valid or loading in confirmation dialog');
+      return;
+    }
 
-    // Simulate API call delay
-    await Future.delayed(Duration(seconds: 2));
+    // Validate form first
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      print('Form validation failed in confirmation dialog');
+      return;
+    }
 
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Emergency Pickup Confirmed!',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+    print('Showing confirmation dialog');
+    await showDialog(
+      context: context,
+      builder: (context) {
+        print('Building confirmation dialog');
+        return AlertDialog(
+          title: const Text('Confirm Emergency Pickup'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Please confirm your emergency pickup request:'),
+                const SizedBox(height: 15),
+                
+                // User info summary
+                const Text('User Information:', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('Name: ${_nameController.text}'),
+                Text('Phone: ${_phoneController.text}'),
+                
+                const SizedBox(height: 10),
+                
+                // Emergency details summary
+                const Text('Emergency Details:', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('Waste Type: $_selectedWasteType'),
+                Text('Address: ${_addressController.text}'),
+                Text('Reason: ${_reasonController.text}'),
+                
+                const SizedBox(height: 15),
+                
+                // Cost information
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.yellow[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.yellow),
                   ),
-                  Text(
-                    '50 EcoCoins deducted. Collector arriving soon.',
-                    style: TextStyle(fontSize: 12),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning_amber, color: Colors.orange),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'This will deduct $_emergencyCost EcoCoins from your account',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
+                
+                const SizedBox(height: 10),
+                
+                const Text(
+                  'Your data will be stored securely in our Firebase Database.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            // Cancel button
+            TextButton(
+              onPressed: () {
+                print('Cancel button pressed');
+                Navigator.pop(context);
+              },
+              child: const Text('CANCEL', style: TextStyle(color: Colors.grey)),
+            ),
+            
+            // Confirm button
+            ElevatedButton(
+              onPressed: () {
+                print('Confirm button pressed');
+                Navigator.pop(context); // Close confirmation dialog
+                _submitEmergencyRequest(); // Submit the request
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
               ),
+              child: const Text('CONFIRM & SUBMIT'),
             ),
           ],
+        );
+      },
+    );
+    print('Confirmation dialog closed');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print('Building widget, isLoading: $_isLoading, formValid: ${_isFormValid()}');
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Emergency Pickup'),
+        backgroundColor: Colors.red,
+        foregroundColor: Colors.white,
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Section
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.red.shade100),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.emergency_outlined, color: Colors.red, size: 40),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Emergency Pickup',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[800],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Cost: $_emergencyCost EcoCoins',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // User Information Section
+                Card(
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'User Information',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Name *',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.person),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your name';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 15),
+                        TextFormField(
+                          controller: _phoneController,
+                          decoration: const InputDecoration(
+                            labelText: 'Phone Number *',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.phone),
+                          ),
+                          keyboardType: TextInputType.phone,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your phone number';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Emergency Details Section
+                Card(
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Emergency Details',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        
+                        // Waste Type Dropdown
+                        DropdownButtonFormField<String>(
+                          value: _selectedWasteType,
+                          decoration: const InputDecoration(
+                            labelText: 'Waste Type *',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.delete_outline),
+                          ),
+                          items: _wasteTypes.map((type) {
+                            return DropdownMenuItem(
+                              value: type,
+                              child: Text(type),
+                            );
+                          }).toList(),
+                          validator: (value) {
+                            if (value == null) {
+                              return 'Please select a waste type';
+                            }
+                            return null;
+                          },
+                          onChanged: (value) {
+                            print('Waste type changed to: $value');
+                            setState(() => _selectedWasteType = value);
+                          },
+                        ),
+                        const SizedBox(height: 15),
+
+                        // Pickup Address
+                        TextFormField(
+                          controller: _addressController,
+                          decoration: const InputDecoration(
+                            labelText: 'Pickup Address *',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.location_on),
+                          ),
+                          maxLines: 2,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter pickup address';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 15),
+
+                        // Emergency Reason
+                        TextFormField(
+                          controller: _reasonController,
+                          decoration: const InputDecoration(
+                            labelText: 'Emergency Reason *',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.info_outline),
+                            hintText: 'Why is this an emergency?',
+                          ),
+                          maxLines: 3,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter emergency reason';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 25),
+
+                // Submit Button - Simplified for debugging
+                Container(
+                  width: double.infinity,
+                  height: 50,
+                  child: _isLoading 
+                      ? ElevatedButton(
+                          onPressed: null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey,
+                          ),
+                          child: const CircularProgressIndicator(color: Colors.white),
+                        )
+                      : ElevatedButton.icon(
+                          onPressed: () {
+                            print('REQUEST EMERGENCY PICKUP button pressed');
+                            print('Selected waste type: $_selectedWasteType');
+                            print('Name: ${_nameController.text}');
+                            print('Phone: ${_phoneController.text}');
+                            print('Address: ${_addressController.text}');
+                            print('Reason: ${_reasonController.text}');
+                            _showConfirmationDialog();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          icon: const Icon(Icons.emergency, color: Colors.white),
+                          label: const Text(
+                            'REQUEST EMERGENCY PICKUP',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                ),
+                const SizedBox(height: 10),
+                
+                // Info Text
+                Center(
+                  child: Text(
+                    'Data will be stored securely in Firebase Database',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 5),
-        behavior: SnackBarBehavior.floating,
       ),
     );
-
-    // Navigate back to home after success
-    await Future.delayed(Duration(seconds: 2));
-    
-    if (mounted) {
-      Navigator.pop(context); // Go back to home
-      setState(() {
-        _isConfirming = false;
-      });
-    }
   }
 
   @override
   void dispose() {
     _reasonController.dispose();
+    _addressController.dispose();
+    _phoneController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 }
