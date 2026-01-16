@@ -35,25 +35,25 @@ class _CleanerState extends State<Cleaner> {
                   child: Column(
                     mainAxisAlignment:MainAxisAlignment.center,
                     children: [
-                        Text("Make Your Home Cleaner",style:TextStyle(fontSize:38,fontWeight:FontWeight.bold,color:Colors.green),
+                        Text("Make Your Home Cleaner",style:TextStyle(fontSize:45,fontWeight:FontWeight.bold,color:Colors.green),
                          textAlign: TextAlign.center,
                         ),
-                        Image.asset('assets/Image/girl.png',width:200,height:400),
-                        Text("Learn how to sort waste effectively and ontribute to a healthier planet, starting from your own space",
+                        Image.asset('assets/Image/girl.png',width:300,height:450),
+                        Text("Learn how to sort waste effectively and \ncontribute to a healthier planet, starting from your own space",
                         style:TextStyle(fontSize:15,color:Colors.green[400]),textAlign:TextAlign.center,
                         
                         ),
-                              const SizedBox(height: 15),
+                              const SizedBox(height: 10),
 
                         ElevatedButton(onPressed: (){
                           Navigator.push(context,
-                          MaterialPageRoute(builder: (context)=>LoginPage()));
+                          MaterialPageRoute(builder: (context)=>RecycleLoginPage()));
                         }, 
                         child: Text("Get Started"),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green[400],
                           foregroundColor: Colors.black,
-                          padding: EdgeInsets.symmetric(horizontal: 50,vertical: 5),
+                          padding: EdgeInsets.symmetric(horizontal: 50,vertical: 10),
                           shape:RoundedRectangleBorder(
                             
                             borderRadius: BorderRadiusGeometry.circular(50),
