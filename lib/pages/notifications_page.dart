@@ -1,6 +1,3 @@
-
-
-
 import 'package:flutter/material.dart';
 import '../services/language_service.dart';
 
@@ -423,5 +420,4 @@ class _NotificationsPageState extends State<NotificationsPage> {
       ),
     );
   }
-
 }
