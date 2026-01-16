@@ -1,253 +1,5 @@
-// import 'package:flutter/material.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:google_maps_flutter/google_maps_flutter.dart';
-// import '../services/notification_service.dart';
-// import 'schedule_confirmation.dart';
-// import '../services/location_service.dart';
-// import 'map.dart';
-
-// class SchedulePickupPage extends StatefulWidget {
-//   const SchedulePickupPage({super.key});
-
-//   @override
-//   State<SchedulePickupPage> createState() => _SchedulePickupPageState();
-// }
-
-// class _SchedulePickupPageState extends State<SchedulePickupPage> {
-//   String selectedWaste = 'Plastic';
-//   String selectedCollector = 'Nearest Collector';
-//   DateTime? selectedDate;
-//   TimeOfDay? selectedTime;
-
-//   final TextEditingController locationController = TextEditingController();
-
-//   Future<void> pickDate() async {
-//     final picked = await showDatePicker(
-//       context: context,
-//       initialDate: DateTime.now().add(const Duration(days: 1)),
-//       firstDate: DateTime.now(),
-//       lastDate: DateTime.now().add(const Duration(days: 30)),
-//     );
-
-//     if (picked != null) {
-//       setState(() => selectedDate = picked);
-//     }
-//   }
-
-//   Future<void> pickTime() async {
-//     final picked = await showTimePicker(
-//       context: context,
-//       initialTime: TimeOfDay.now(),
-//     );
-
-//     if (picked != null) {
-//       setState(() => selectedTime = picked);
-//     }
-//   }
-// Future<void> submitSchedule(BuildContext context) async {
-//   try {
-//     final position = await LocationService.getCurrentLocation();
-
-//     await FirebaseFirestore.instance
-//         .collection('pickup_requests')
-//         .add({
-//       'wasteType': selectedWaste,
-//       'collectorType': selectedCollector,
-//       'locationText': locationController.text,
-//       'latitude': position.latitude,
-//       'longitude': position.longitude,
-//       'pickupDate': selectedDate!.toIso8601String(),
-//       'pickupTime': selectedTime!.format(context),
-//       'createdAt': Timestamp.now(),
-//     });
-
-//       await NotificationService.showNotification(
-//   title: 'Pickup Scheduled',
-//   body: 'Your waste pickup has been scheduled successfully.',
-// );
-
-//     // Navigator.push(
-//     //   context,
-//     //   MaterialPageRoute(
-//     //     builder: (_) => MapPage(
-//     //       userLocation: LatLng(
-//     //         position.latitude,
-//     //         position.longitude,
-//     //       ),
-//     //     ),
-//     //   ),
-//     // );
-//     Navigator.pushReplacement(
-//       context,
-//       MaterialPageRoute(
-//         builder: (_) => ScheduleConfirmationPage(
-//           wasteType: selectedWaste,
-//           pickupDate:
-//               selectedDate!.toLocal().toString().split(' ')[0],
-//           pickupTime: selectedTime!.format(context),
-//           location: locationController.text,
-//         ),
-//       ),
-//     );
-
-//   } catch (e) {
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(content: Text(e.toString())),
-//     );
-//   }
-// }
-
-//   // void submitSchedule() {
-//   //   if (selectedDate == null ||
-//   //       selectedTime == null ||
-//   //       locationController.text.isEmpty) {
-//   //     ScaffoldMessenger.of(context).showSnackBar(
-//   //       const SnackBar(content: Text('Please complete all fields')),
-//   //     );
-//   //     return;
-//   //   }
-
-//   //   ScaffoldMessenger.of(context).showSnackBar(
-//   //     const SnackBar(content: Text('Pickup Scheduled Successfully')),
-//   //   );
-//   // }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: const Color.fromARGB(255, 255, 255, 255), 
-//       appBar: AppBar(
-//         title: const Text('Schedule Pickup'),
-//         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-//         foregroundColor: const Color.fromARGB(255, 0, 0, 0),
-//       ),
-//       body: Padding(
-//         padding: const EdgeInsets.all(16),
-//         child: ListView(
-//           children: [
-//             const Text(
-//               'Schedule Waste Collection',
-//               style: TextStyle(
-//                 color: Color.fromARGB(255, 14, 14, 14), // Gold
-//                 fontSize: 22,
-//                 fontWeight: FontWeight.bold,
-//               ),
-//             ),
-//             const SizedBox(height: 20),
-
-//             /// Waste Type
-//             DropdownButtonFormField<String>(
-//               value: selectedWaste,
-//               dropdownColor: const Color.fromARGB(255, 151, 153, 152),
-//               decoration: inputStyle('Waste Type'),
-//               items: ['Plastic', 'Organic', 'Paper', 'Metal']
-//                   .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-//                   .toList(),
-//               onChanged: (value) => setState(() => selectedWaste = value!),
-//             ),
-//             const SizedBox(height: 15),
-
-//             /// Collector
-//             DropdownButtonFormField<String>(
-//               value: selectedCollector,
-//               dropdownColor: const Color.fromARGB(255, 161, 162, 161),
-//               decoration: inputStyle('Collector'),
-//               items: [
-//                 'Nearest Collector',
-//                 'Kebele Collector',
-//                 'Private Recycler'
-//               ]
-//                   .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-//                   .toList(),
-//               onChanged: (value) =>
-//                   setState(() => selectedCollector = value!),
-//             ),
-//             const SizedBox(height: 15),
-
-//             /// Location
-//             TextField(
-//               controller: locationController,
-//               style: const TextStyle(color: Colors.white),
-//               decoration: inputStyle('Pickup Location'),
-//             ),
-//             const SizedBox(height: 15),
-
-//             /// Date
-//             ElevatedButton.icon(
-//               icon: const Icon(Icons.calendar_today),
-//               label: Text(
-//                 selectedDate == null
-//                     ? 'Select Date'
-//                     : selectedDate!.toLocal().toString().split(' ')[0],
-//               ),
-//               onPressed: pickDate,
-//               style: buttonStyle(),
-//             ),
-//             const SizedBox(height: 10),
-
-//             /// Time
-//             ElevatedButton.icon(
-//               icon: const Icon(Icons.access_time),
-//               label: Text(
-//                 selectedTime == null
-//                     ? 'Select Time'
-//                     : selectedTime!.format(context),
-//               ),
-//               onPressed: pickTime,
-//               style: buttonStyle(),
-//             ),
-//             const SizedBox(height: 25),
-
-//             /// Submit
-//             ElevatedButton(
-//                onPressed: () => submitSchedule(context),
-//               style: ElevatedButton.styleFrom(
-//                 backgroundColor: const Color.fromARGB(255, 55, 212, 120),
-//                 padding: const EdgeInsets.symmetric(vertical: 14),
-//               ),
-//               child: const Text(
-//                 'Schedule Pickup',
-//                 style: TextStyle(
-//                   color: Colors.black,
-//                   fontSize: 18,
-//                   fontWeight: FontWeight.bold,
-//                 ),
-//               ),
-//             ),
-            
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   InputDecoration inputStyle(String label) {
-//     return InputDecoration(
-//       labelText: label,
-//       labelStyle: const TextStyle(color: Colors.white70),
-//       filled: true,
-//       fillColor: const Color(0xFF2C3E34),
-//       border: OutlineInputBorder(
-//         borderRadius: BorderRadius.circular(10),
-//       ),
-//     );
-//   }
-
-//   ButtonStyle buttonStyle() {
-//     return ElevatedButton.styleFrom(
-//       backgroundColor: const Color(0xFF2C3E34),
-//       foregroundColor: Colors.white,
-//       padding: const EdgeInsets.symmetric(vertical: 12),
-//     );
-//   }
-// }
-
-
-
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../services/notification_service.dart';
 import 'schedule_confirmation.dart';
 import '../services/location_service.dart';
@@ -312,7 +64,7 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
     }
   }
 
-  Future<void> submitSchedule(BuildContext context) async {
+  void _showConfirmationDialog() {
     if (selectedDate == null ||
         selectedTime == null ||
         locationController.text.isEmpty) {
@@ -329,6 +81,202 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
       return;
     }
 
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.schedule, color: Color(0xFF2C3E34), size: 28),
+            SizedBox(width: 10),
+            Text(
+              'Confirm Schedule',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2C3E34),
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Please review your pickup details:',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[700],
+                ),
+              ),
+              SizedBox(height: 20),
+              
+              // Details Card
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Color(0xFF2C3E34).withOpacity(0.2)),
+                ),
+                child: Column(
+                  children: [
+                    _buildDetailRow(
+                      icon: Icons.recycling,
+                      label: 'Waste Type',
+                      value: selectedWaste,
+                      iconColor: Colors.blue,
+                    ),
+                    SizedBox(height: 12),
+                    _buildDetailRow(
+                      icon: Icons.people,
+                      label: 'Collector',
+                      value: selectedCollector,
+                      iconColor: Colors.green,
+                    ),
+                    SizedBox(height: 12),
+                    _buildDetailRow(
+                      icon: Icons.location_on,
+                      label: 'Location',
+                      value: locationController.text,
+                      iconColor: Colors.red,
+                    ),
+                    SizedBox(height: 12),
+                    _buildDetailRow(
+                      icon: Icons.calendar_today,
+                      label: 'Date',
+                      value: _formatDate(selectedDate!),
+                      iconColor: Colors.purple,
+                    ),
+                    SizedBox(height: 12),
+                    _buildDetailRow(
+                      icon: Icons.access_time,
+                      label: 'Time',
+                      value: selectedTime!.format(context),
+                      iconColor: Colors.orange,
+                    ),
+                  ],
+                ),
+              ),
+              
+              SizedBox(height: 20),
+              
+              // Note
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Color(0xFFFFF3E0),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info, color: Colors.orange, size: 18),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'You can cancel or reschedule up to 2 hours before pickup',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              _submitSchedule(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF2C3E34),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: Text(
+              'Confirm & Schedule',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color iconColor,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 18, color: iconColor),
+        ),
+        SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[600],
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2C3E34),
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _submitSchedule(BuildContext context) async {
     setState(() => _isSubmitting = true);
 
     try {
@@ -345,6 +293,43 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
         'createdAt': Timestamp.now(),
         'status': 'pending',
       });
+
+      // Show success snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Schedule Confirmed!',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Your pickup is scheduled for ${_formatDate(selectedDate!)} at ${selectedTime!.format(context)}',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          duration: Duration(seconds: 4),
+        ),
+      );
 
       await NotificationService.showNotification(
         title: 'Pickup Scheduled',
@@ -365,7 +350,15 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: ${e.toString()}'),
+          content: Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text('Error: ${e.toString()}'),
+              ),
+            ],
+          ),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -403,8 +396,7 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header with illustration
-             SizedBox(height: 10,),
+            SizedBox(height: 10),
 
             Container(
               height: 125,
@@ -434,11 +426,6 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
                         color: Color(0xFFE8F5E9).withOpacity(0.3),
                         shape: BoxShape.circle,
                       ),
-                      // child: Icon(
-                      //   Icons.recycling,
-                      //   size: 40,
-                      //   color: Color(0xFF4CAF50),
-                      // ),
                     ),
                   ),
                   Padding(
@@ -774,9 +761,7 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
                       width: double.infinity,
                       height: 56,
                       child: ElevatedButton(
-                        onPressed: _isSubmitting
-                            ? null
-                            : () => submitSchedule(context),
+                        onPressed: _isSubmitting ? null : _showConfirmationDialog,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF2C3E34),
                           foregroundColor: Colors.white,
@@ -827,24 +812,9 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
                           width: 1,
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.info, color: Color(0xFFFF9800), size: 20),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Collectors usually arrive within 30 minutes of the scheduled time',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF666666),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                     
 
-                    SizedBox(height: 40),
+                    )// SizedBox(height: 40),
                   ],
                 ),
               ),
@@ -852,7 +822,6 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
           ],
         ),
       ),
-      
     );
   }
 
@@ -964,3 +933,13 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
     }
   }
 }
+
+
+
+
+
+
+
+
+
+
