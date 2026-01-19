@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -54,64 +55,65 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.dispose();
   }
 
-  Future<void> _loadUserData() async {
-    print('=== LOADING USER DATA ===');
-    setState(() => _isLoading = true);
-    
-    final user = _auth.currentUser;
-    if (user == null) {
-      print(' No user logged in');
-      setState(() => _isLoading = false);
-      return;
-    }
+Future<void> _loadUserData() async {
+  print('=== LOADING USER DATA ===');
+  setState(() => _isLoading = true);
+  
+  final user = _auth.currentUser;
+  if (user == null) {
+    print(' No user logged in');
+    setState(() => _isLoading = false);
+    return;
+  }
 
-    try {
-      print(' User UID: ${user.uid}');
-      print(' User email: ${user.email}');
-      print(' User display name: ${user.displayName}');
+  try {
+    print(' User UID: ${user.uid}');
+    print(' User email: ${user.email}');
+    print(' User display name: ${user.displayName}');
+    
+    // Use default cache behavior
+    final doc = await _firestore.collection('users').doc(user.uid).get();
+    
+    if (doc.exists) {
+      print(' User document found');
+      print('Document data: ${doc.data()}');
       
-      final doc = await _firestore.collection('users').doc(user.uid).get();
-      
-      if (doc.exists) {
-        print(' User document found');
-        print('Document data: ${doc.data()}');
-        
-        setState(() {
-          _nameController.text = doc.data()?['name'] ?? user.displayName ?? '';
-          _emailController.text = user.email ?? '';
-          _phoneController.text = doc.data()?['phone'] ?? '';
-          _addressController.text = doc.data()?['address'] ?? '';
-          _selectedCity = doc.data()?['city'] ?? 'Addis Ababa';
-        });
-      } else {
-        print(' User document does not exist, using defaults');
-        setState(() {
-          _nameController.text = user.displayName ?? 'User';
-          _emailController.text = user.email ?? '';
-          _phoneController.text = '';
-          _addressController.text = '';
-          _selectedCity = 'Addis Ababa';
-        });
-      }
-    } catch (e) {
-      print(' Error loading user data: $e');
-      // Fallback to auth user data
+      setState(() {
+        _nameController.text = doc.data()?['name'] ?? user.displayName ?? '';
+        _emailController.text = user.email ?? '';
+        _phoneController.text = doc.data()?['phone'] ?? '';
+        _addressController.text = doc.data()?['address'] ?? '';
+        _selectedCity = doc.data()?['city'] ?? 'Addis Ababa';
+      });
+    } else {
+      print(' User document does not exist, using defaults');
       setState(() {
         _nameController.text = user.displayName ?? 'User';
         _emailController.text = user.email ?? '';
+        _phoneController.text = '';
+        _addressController.text = '';
+        _selectedCity = 'Addis Ababa';
       });
     }
-    
-    setState(() => _isLoading = false);
-    print('=== USER DATA LOADED ===');
+  } catch (e) {
+    print(' Error loading user data: $e');
+    // Fallback to auth user data
+    setState(() {
+      _nameController.text = user.displayName ?? 'User';
+      _emailController.text = user.email ?? '';
+    });
   }
+  
+  setState(() => _isLoading = false);
+  print('=== USER DATA LOADED ===');
+}
 
   Future<void> _pickImage() async {
     try {
       final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
         setState(() => _profileImage = File(pickedFile.path));
-        print(' Image selected: ${pickedFile.path}');
+        print('📸 Image selected: ${pickedFile.path}');
       }
     } catch (e) {
       print(' Error picking image: $e');
@@ -147,7 +149,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final user = _auth.currentUser;
       
       if (user == null) {
-        print('❌ ERROR: No user is logged in!');
+        print(' ERROR: No user is logged in!');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('No user logged in'),
@@ -191,7 +193,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         SetOptions(merge: true),
       );
       
-      print(' Firestore save successful');
+      print('Firestore save successful');
 
       // 4. Show success message
       print(' Showing success message...');
@@ -232,10 +234,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
       );
 
-      print('⏳ Waiting 1 second before navigating back...');
+      print(' Waiting 1 second before navigating back...');
       await Future.delayed(Duration(seconds: 1));
 
-      print('🔙 Navigating back with success');
+      print(' Navigating back with success');
       Navigator.pop(context, true);
 
     } catch (e) {
@@ -276,7 +278,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       );
       
     } finally {
-      print('🔄 Setting _isSaving to false');
+      print(' Setting _isSaving to false');
       if (mounted) {
         setState(() => _isSaving = false);
       }
@@ -316,7 +318,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             IconButton(
               icon: Icon(Icons.save),
               onPressed: () {
-                print('💾 Save button pressed!');
+                print(' Save button pressed!');
                 _saveProfile();
               },
               tooltip: 'Save Changes',
@@ -529,7 +531,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     height: 56,
                     child: ElevatedButton(
                       onPressed: _isSaving ? null : () {
-                        print('💾 Save Changes button pressed!');
+                        print(' Save Changes button pressed!');
                         _saveProfile();
                       },
                       style: ElevatedButton.styleFrom(
@@ -644,6 +646,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 }
+
+
+
+
 
 
 
