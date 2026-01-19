@@ -25,6 +25,8 @@ class _ProfilePageState extends State<ProfilePage> {
   int _totalPickups = 12;
   int _ecoCoins = 1250;
   String _profileImageUrl = '';
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -44,22 +46,71 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() {});
   }
 
-  Future<void> _loadUserData() async {
+  
+
+Future<void> _loadUserData() async {
+  try {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    
     final user = _auth.currentUser;
-    if (user != null) {
-      final doc = await _firestore.collection('users').doc(user.uid).get();
-      if (doc.exists) {
-        setState(() {
-          _userName = doc.data()?['name'] ?? user.displayName ?? 'User';
-          _userEmail = user.email ?? 'user@example.com';
-          _userLevel = doc.data()?['userLevel'] ?? LanguageService.t('level');
-          _totalRecycled = (doc.data()?['totalRecycled'] ?? 0).toInt();
-          _totalPickups = (doc.data()?['totalPickups'] ?? 0).toInt();
-          _ecoCoins = (doc.data()?['ecoCoins'] ?? 0).toInt();
-          _profileImageUrl = doc.data()?['profileImageUrl'] ?? '';
-        });
-      }
+
+    if (user == null) {
+      setState(() {
+        _errorMessage = 'User not logged in';
+        _isLoading = false;
+      });
+      return;
     }
+
+    // Use default cache behavior (will work offline)
+    final doc = await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .get(); // Remove GetOptions to use default caching
+
+    if (!doc.exists) {
+      setState(() {
+        _errorMessage = 'User profile not found';
+        _isLoading = false;
+      });
+      return;
+    }
+
+    final data = doc.data()!;
+
+    setState(() {
+      _userName = data['name'] ?? user.displayName ?? 'User';
+      _userEmail = user.email ?? 'user@example.com';
+      _userLevel = data['userLevel'] ?? LanguageService.t('level');
+      _totalRecycled = (data['totalRecycled'] ?? 0).toInt();
+      _totalPickups = (data['totalPickups'] ?? 0).toInt();
+      _ecoCoins = (data['ecoCoins'] ?? 0).toInt();
+      _profileImageUrl = data['profileImageUrl'] ?? '';
+
+      _isLoading = false;
+      _errorMessage = null;
+    });
+  } on FirebaseException catch (e) {
+    print('Firestore error: $e');
+    setState(() {
+      _errorMessage = e.message ?? 'Firestore error';
+      _isLoading = false;
+    });
+  } catch (e) {
+    print('Error loading user data: $e');
+    setState(() {
+      _errorMessage = 'Failed to load profile';
+      _isLoading = false;
+    });
+  }
+}
+  Future<void> _refreshProfile() async {
+    setState(() => _isLoading = true);
+    await _loadUserData();
+    setState(() => _isLoading = false);
   }
 
   Future<void> _logout() async {
@@ -91,272 +142,340 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  void _navigateToEditProfile() async {
+    final updated = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => EditProfilePage()),
+    );
+    
+    if (updated == true) {
+      // Refresh user data
+      await _loadUserData();
+      // Force UI update
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: CustomScrollView(
-        slivers: [
-          // Profile Header
-          SliverAppBar(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            expandedHeight: 200,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Colors.green[700]!, Colors.green[500]!],
-                  ),
-                ),
-                child: SafeArea(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundColor: Colors.white,
-                            child: _profileImageUrl.isNotEmpty
-                                ? CircleAvatar(
-                                    radius: 48,
-                                    backgroundImage: NetworkImage(_profileImageUrl),
-                                  )
-                                : CircleAvatar(
-                                    radius: 48,
-                                    backgroundColor: Colors.green[100],
-                                    child: Icon(
-                                      Icons.person,
-                                      size: 40,
-                                      color: Colors.green[700],
-                                    ),
-                                  ),
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: GestureDetector(
-                              onTap: () => _navigateToEditProfile(),
-                              child: Container(
-                                padding: EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black26,
-                                      blurRadius: 4,
-                                    ),
-                                  ],
-                                ),
-                                child: Icon(Icons.edit, color: Colors.green[700], size: 18),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        _userName,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        _userEmail,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white.withOpacity(0.9),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+    if (_isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 20),
+            Text(
+              'Loading profile...',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 16,
               ),
             ),
-          ),
-
-          // Stats and Settings
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  // Stats Cards
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.green[100]!),
+          ],
+        ),
+      );
+    }
+    
+    // if (_errorMessage == null) {
+    //   return Center(
+    //     child: Column(
+    //       mainAxisAlignment: MainAxisAlignment.center,
+    //       children: [
+    //         Icon(Icons.error, color: Colors.red, size: 50),
+    //         SizedBox(height: 20),
+    //         Padding(
+    //           padding: const EdgeInsets.symmetric(horizontal: 40),
+    //           child: Text(
+    //             _errorMessage!,
+    //             textAlign: TextAlign.center,
+    //             style: TextStyle(
+    //               color: Colors.red,
+    //               fontSize: 16,
+    //             ),
+    //           ),
+    //         ),
+    //         SizedBox(height: 20),
+    //         ElevatedButton(
+    //           onPressed: _refreshProfile,
+    //           style: ElevatedButton.styleFrom(
+    //             backgroundColor: Colors.green[700],
+    //             foregroundColor: Colors.white,
+    //           ),
+    //           child: Text('Retry'),
+    //         ),
+    //       ],
+    //     ),
+    //   );
+    // }
+    
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: RefreshIndicator(
+        onRefresh: _refreshProfile,
+        child: CustomScrollView(
+          slivers: [
+            // Profile Header
+            SliverAppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              expandedHeight: 200,
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Colors.green[700]!, Colors.green[500]!],
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  ),
+                  child: SafeArea(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildStatItem(LanguageService.t('totalRecycled'), '${_totalRecycled}kg', Icons.recycling),
-                        Container(height: 40, width: 1, color: Colors.green[200]),
-                        _buildStatItem(LanguageService.t('pickups'), '$_totalPickups', Icons.local_shipping),
-                        Container(height: 40, width: 1, color: Colors.green[200]),
-                        _buildStatItem(LanguageService.t('ecoCoins'), '$_ecoCoins', Icons.monetization_on),
-                      ],
-                    ),
-                  ),
-
-                  SizedBox(height: 30),
-
-                  // User Level Badge
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.green[700]!, Colors.green[500]!],
-                      ),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.emoji_events, color: Colors.white, size: 24),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _userLevel,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                LanguageService.t('keepRecycling'),
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.9),
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icon(Icons.arrow_forward, color: Colors.white),
-                      ],
-                    ),
-                  ),
-
-                  SizedBox(height: 30),
-
-                  // Account Section
-                  _buildSection(LanguageService.t('account'), [
-                    _buildSettingItem(
-                      icon: Icons.edit_note,
-                      title: LanguageService.t('editProfile'),
-                      subtitle: 'Update your personal information',
-                      onTap: () => _navigateToEditProfile(),
-                    ),
-                    _buildSettingItem(
-                      icon: Icons.security,
-                      title: LanguageService.t('privacySecurity'),
-                      subtitle: 'Manage your account security',
-                      onTap: () {},
-                    ),
-                  ]),
-
-                  SizedBox(height: 30),
-
-                  // App Settings Section
-                  _buildSection(LanguageService.t('appSettings'), [
-                    _buildSettingItem(
-                      icon: Icons.notifications,
-                      title: LanguageService.t('notifications'),
-                      subtitle: 'Manage notification preferences',
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationsPage())),
-                    ),
-                    _buildSettingItem(
-                      icon: Icons.language,
-                      title: LanguageService.t('language'),
-                      subtitle: LanguageService.languageNotifier.value == 'en' ? 'English' : 'አማርኛ',
-                      trailing: Switch(
-                        value: LanguageService.languageNotifier.value == 'am',
-                        onChanged: (value) {
-                          LanguageService.toggleLanguage();
-                        },
-                      ),
-                    ),
-                    _buildSettingItem(
-                      icon: Icons.dark_mode,
-                      title: LanguageService.t('darkMode'),
-                      subtitle: 'Switch between themes',
-                      trailing: Switch(value: false, onChanged: (value) {}),
-                    ),
-                  ]),
-
-                  SizedBox(height: 40),
-
-                  // Logout Button
-                  Container(
-                    width: double.infinity,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: Colors.red[50],
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: Colors.red[100]!),
-                    ),
-                    child: TextButton.icon(
-                      onPressed: _logout,
-                      icon: Icon(Icons.logout, color: Colors.red),
-                      label: Text(
-                        LanguageService.t('logout'),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.red,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 20),
-
-                  // Delete Account (Danger Zone)
-                  TextButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: Text(LanguageService.t('deleteAccount')),
-                          content: Text(LanguageService.t('deleteWarning')),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: Text(LanguageService.t('cancel')),
+                        Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundColor: Colors.white,
+                              child: _profileImageUrl.isNotEmpty
+                                  ? CircleAvatar(
+                                      radius: 48,
+                                      backgroundImage: NetworkImage(_profileImageUrl),
+                                    )
+                                  : CircleAvatar(
+                                      radius: 48,
+                                      backgroundColor: Colors.green[100],
+                                      child: Icon(
+                                        Icons.person,
+                                        size: 40,
+                                        color: Colors.green[700],
+                                      ),
+                                    ),
                             ),
-                            TextButton(
-                              onPressed: () {},
-                              style: TextButton.styleFrom(foregroundColor: Colors.red),
-                              child: Text(LanguageService.t('deleteAccount')),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: _navigateToEditProfile,
+                                child: Container(
+                                  padding: EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black26,
+                                        blurRadius: 4,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(Icons.edit, color: Colors.green[700], size: 18),
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                      );
-                    },
-                    child: Text(
-                      LanguageService.t('deleteAccount'),
-                      style: TextStyle(color: Colors.grey[600]),
+                        SizedBox(height: 16),
+                        Text(
+                          _userName,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          _userEmail,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+
+            // Stats and Settings
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Stats Cards
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.green[50],
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.green[100]!),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildStatItem(LanguageService.t('totalRecycled'), '${_totalRecycled}kg', Icons.recycling),
+                          Container(height: 40, width: 1, color: Colors.green[200]),
+                          _buildStatItem(LanguageService.t('pickups'), '$_totalPickups', Icons.local_shipping),
+                          Container(height: 40, width: 1, color: Colors.green[200]),
+                          _buildStatItem(LanguageService.t('ecoCoins'), '$_ecoCoins', Icons.monetization_on),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 30),
+
+                    // User Level Badge
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.green[700]!, Colors.green[500]!],
+                        ),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.emoji_events, color: Colors.white, size: 24),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _userLevel,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  LanguageService.t('keepRecycling'),
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.arrow_forward, color: Colors.white),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 30),
+
+                    // Account Section
+                    _buildSection(LanguageService.t('account'), [
+                      _buildSettingItem(
+                        icon: Icons.edit_note,
+                        title: LanguageService.t('editProfile'),
+                        subtitle: 'Update your personal information',
+                        onTap: _navigateToEditProfile,
+                      ),
+                      _buildSettingItem(
+                        icon: Icons.security,
+                        title: LanguageService.t('privacySecurity'),
+                        subtitle: 'Manage your account security',
+                        onTap: () {},
+                      ),
+                    ]),
+
+                    SizedBox(height: 30),
+
+                    // App Settings Section
+                    _buildSection(LanguageService.t('appSettings'), [
+                      _buildSettingItem(
+                        icon: Icons.notifications,
+                        title: LanguageService.t('notifications'),
+                        subtitle: 'Manage notification preferences',
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationsPage())),
+                      ),
+                      _buildSettingItem(
+                        icon: Icons.language,
+                        title: LanguageService.t('language'),
+                        subtitle: LanguageService.languageNotifier.value == 'en' ? 'English' : 'አማርኛ',
+                        trailing: Switch(
+                          value: LanguageService.languageNotifier.value == 'am',
+                          onChanged: (value) {
+                            LanguageService.toggleLanguage();
+                          },
+                        ),
+                      ),
+                      _buildSettingItem(
+                        icon: Icons.dark_mode,
+                        title: LanguageService.t('darkMode'),
+                        subtitle: 'Switch between themes',
+                        trailing: Switch(value: false, onChanged: (value) {}),
+                      ),
+                    ]),
+
+                    SizedBox(height: 40),
+
+                    // Logout Button
+                    Container(
+                      width: double.infinity,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(color: Colors.red[100]!),
+                      ),
+                      child: TextButton.icon(
+                        onPressed: _logout,
+                        icon: Icon(Icons.logout, color: Colors.red),
+                        label: Text(
+                          LanguageService.t('logout'),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 20),
+
+                    // Delete Account (Danger Zone)
+                    TextButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text(LanguageService.t('deleteAccount')),
+                            content: Text(LanguageService.t('deleteWarning')),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text(LanguageService.t('cancel')),
+                              ),
+                              TextButton(
+                                onPressed: () {},
+                                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                child: Text(LanguageService.t('deleteAccount')),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      child: Text(
+                        LanguageService.t('deleteAccount'),
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -458,12 +577,5 @@ class _ProfilePageState extends State<ProfilePage> {
         if (onTap != null) Divider(height: 0, indent: 72),
       ],
     );
-  }
-
-  void _navigateToEditProfile() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => EditProfilePage()),
-    ).then((_) => _loadUserData());
   }
 }
