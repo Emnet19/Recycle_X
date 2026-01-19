@@ -1,7 +1,10 @@
 
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../services/user_service.dart';
+import '../components/editProfile.dart';
 import 'HomePage.dart';
 import 'signup.dart'; 
 
@@ -44,78 +47,121 @@ class _RecycleLoginPageState extends State<RecycleLoginPage> {
     }
   }
 
-  // --------- EMAIL/PASSWORD LOGIN ---------
+
   void _login() async {
-    if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
-      setState(() => _isLoading = true);
-      try {
-        await _auth.signInWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
+  if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
+    setState(() => _isLoading = true);
+    try {
+      await _auth.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      
+      if (!mounted) return;
+      
+      // Check if user needs to complete profile
+      final user = _auth.currentUser;
+      if (user != null) {
+        final needsProfile = await UserService.needsProfileCompletion(user.uid);
+        
+        if (needsProfile) {
+          // Navigate to profile completion
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EditProfilePage(
+                isFirstTime: false,
+                userEmail: user.email ?? '',
+              ),
+            ),
+          );
+        } else {
+          // Go directly to home
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => RecycleXHome()),
+          );
+        }
+      }
+      
+    } on FirebaseAuthException catch (e) {
+      String message = '';
+      if (e.code == 'user-not-found') {
+        message = 'No user found for that email.';
+      } else if (e.code == 'wrong-password') {
+        message = 'Wrong password provided.';
+      } else {
+        message = e.message ?? 'Login failed';
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Please enter email and password')),
+    );
+  }
+}
+
+// Also update Google Sign-In:
+Future<void> _signInWithGoogle() async {
+  setState(() => _isLoading = true);
+  try {
+    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+    if (googleUser == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    final userCredential = await _auth.signInWithCredential(credential);
+    
+    if (!mounted) return;
+    
+    // Initialize Google user in Firestore
+    if (userCredential.user != null) {
+      await UserService.initializeNewUser(userCredential.user!);
+      
+      // Check if needs profile completion
+      final needsProfile = await UserService.needsProfileCompletion(userCredential.user!.uid);
+      
+      if (needsProfile) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EditProfilePage(
+              isFirstTime: true,
+              userEmail: userCredential.user!.email ?? '',
+            ),
+          ),
         );
-        if (!mounted) return;
+      } else {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => RecycleXHome()),
         );
-      } on FirebaseAuthException catch (e) {
-        String message = '';
-        if (e.code == 'user-not-found') {
-          message = 'No user found for that email.';
-        } else if (e.code == 'wrong-password') {
-          message = 'Wrong password provided.';
-        } else {
-          message = e.message ?? 'Login failed';
-        }
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
-      } finally {
-        if (mounted) setState(() => _isLoading = false);
       }
-    } else {
+    }
+    
+  } catch (e) {
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter email and password')),
+        SnackBar(content: Text("Google Sign-In failed: ${e.toString()}")),
       );
+      setState(() => _isLoading = false);
     }
   }
-
-  Future<void> _signInWithGoogle() async {
-    setState(() => _isLoading = true);
-    try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        if (mounted) setState(() => _isLoading = false);
-        return; // user cancelled
-      }
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      await _auth.signInWithCredential(credential);
-      if (!mounted) return;
-      
-      // Navigate to home page
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => RecycleXHome()),
-      );
-      
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Google Sign-In failed: ${e.toString()}")),
-        );
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -139,7 +185,7 @@ class _RecycleLoginPageState extends State<RecycleLoginPage> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  "Recycle for a better planet 🌎",
+                  "Recycle for a better planet ",
                   style: TextStyle(
                     color: Colors.green[400],
                     fontSize: 16,
