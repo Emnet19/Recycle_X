@@ -1,9 +1,11 @@
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../services/notification_service.dart';
 import 'schedule_confirmation.dart';
 import '../services/location_service.dart';
-
+import 'package:geolocator/geolocator.dart';
 class SchedulePickupPage extends StatefulWidget {
   const SchedulePickupPage({super.key});
 
@@ -276,100 +278,238 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
     );
   }
 
-  Future<void> _submitSchedule(BuildContext context) async {
-    setState(() => _isSubmitting = true);
+Future<void> _submitSchedule(BuildContext context) async {
+  print('=== STARTING SCHEDULE SUBMISSION ===');
+  setState(() => _isSubmitting = true);
 
-    try {
-      final position = await LocationService.getCurrentLocation();
-
-      await FirebaseFirestore.instance.collection('pickup_requests').add({
-        'wasteType': selectedWaste,
-        'collectorType': selectedCollector,
-        'locationText': locationController.text,
-        'latitude': position.latitude,
-        'longitude': position.longitude,
-        'pickupDate': selectedDate!.toIso8601String(),
-        'pickupTime': selectedTime!.format(context),
-        'createdAt': Timestamp.now(),
-        'status': 'pending',
-      });
-
-      // Show success snackbar
+  try {
+    // Get current user
+    final user = FirebaseAuth.instance.currentUser;
+    print('Current user: ${user?.uid}');
+    
+    if (user == null) {
+      print('ERROR: No user logged in');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Schedule Confirmed!',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Your pickup is scheduled for ${_formatDate(selectedDate!)} at ${selectedTime!.format(context)}',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          duration: Duration(seconds: 4),
+          content: Text('Please login first'),
+          backgroundColor: Colors.red,
         ),
       );
+      setState(() => _isSubmitting = false);
+      return;
+    }
 
-      await NotificationService.showNotification(
-        title: 'Pickup Scheduled',
-        body: 'Your waste pickup has been scheduled successfully.',
-      );
+    // Get location
+    Map<String, double> locationData = {
+      'latitude': 9.0320, 
+      'longitude': 38.7469
+    };
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ScheduleConfirmationPage(
-            wasteType: selectedWaste,
-            pickupDate: selectedDate!.toLocal().toString().split(' ')[0],
-            pickupTime: selectedTime!.format(context),
-            location: locationController.text,
-          ),
+    try {
+      print('Getting current location...');
+      final position = await LocationService.getCurrentLocation();
+      print('Location result type: ${position.runtimeType}');
+      
+      locationData['latitude'] = position.latitude;
+      locationData['longitude'] = position.longitude;
+      
+      print('Location obtained: ${position.latitude}, ${position.longitude}');
+    } catch (e) {
+      print('Location error: $e');
+      print('Using default location: ${locationData['latitude']}, ${locationData['longitude']}');
+    }
+
+    // Create pickup request with user ID
+    final scheduledDateTime = DateTime(
+      selectedDate!.year,
+      selectedDate!.month,
+      selectedDate!.day,
+      selectedTime!.hour,
+      selectedTime!.minute,
+    );
+
+    final pickupData = {
+      'userId': user.uid,
+      'userEmail': user.email ?? 'unknown@email.com',
+      'userName': user.displayName ?? 'User',
+      'wasteType': selectedWaste,
+      'collectorType': selectedCollector,
+      'locationText': locationController.text,
+      'latitude': locationData['latitude'],
+      'longitude': locationData['longitude'],
+      'pickupDate': selectedDate!.toIso8601String(),
+      'pickupTime': selectedTime!.format(context),
+      'pickupDateTime': scheduledDateTime.toIso8601String(),
+      'createdAt': Timestamp.now(),
+      'status': 'pending',
+      'isActive': true,
+    };
+
+    print('Submitting pickup data: $pickupData');
+    
+    // Save to Firestore
+    final docRef = await FirebaseFirestore.instance
+        .collection('pickup_requests')
+        .add(pickupData);
+    
+    print('Pickup saved successfully! Document ID: ${docRef.id}');
+
+    // Show success snackbar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.white),
+            SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Schedule Confirmed!',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Your pickup is scheduled for ${_formatDate(selectedDate!)} at ${selectedTime!.format(context)}',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        duration: Duration(seconds: 4),
+      ),
+    );
+
+    // Try to show notification (optional - won't break if it fails)
+    try {
+      // Check if NotificationService has showNotification method
+      if (NotificationService.showNotification != null) {
+        await NotificationService.showNotification(
+          title: 'Pickup Scheduled',
+          body: 'Your $selectedWaste pickup is scheduled for ${selectedTime!.format(context)}',
+        );
+        print('Notification sent');
+      }
+    } catch (e) {
+      print('Could not send notification: $e');
+      // This is optional, so don't worry if it fails
+    }
+
+    print('Navigating to confirmation page...');
+    // Navigate to confirmation page
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ScheduleConfirmationPage(
+          wasteType: selectedWaste,
+          pickupDate: selectedDate!.toLocal().toString().split(' ')[0],
+          pickupTime: selectedTime!.format(context),
+          location: locationController.text,
+        ),
+      ),
+    );
+
+  } catch (e) {
+    print('=== ERROR SUBMITTING SCHEDULE ===');
+    print('Error type: ${e.runtimeType}');
+    print('Error details: $e');
+    
+    String errorMessage = 'Failed to schedule pickup. Please try again.';
+    if (e is FirebaseException) {
+      errorMessage = 'Error: ${e.message ?? e.code}';
+      if (e.code == 'permission-denied') {
+        errorMessage = 'Permission denied. Check Firestore rules.';
+      }
+    }
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(errorMessage),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 4),
+      ),
+    );
+  } finally {
+    print('Setting _isSubmitting to false');
+    if (mounted) {
+      setState(() => _isSubmitting = false);
+    }
+    print('=== SCHEDULE SUBMISSION COMPLETED ===');
+  }
+}
+// Helper method for notifications
+void _tryShowNotification(String wasteType, String time) {
+  try {
+    // Try the most common pattern
+    NotificationService.showNotification(
+      title: 'Pickup Scheduled',
+      body: 'Your $wasteType pickup is scheduled for $time',
+    );
+    print('Notification sent');
+  } catch (e) {
+    print('Could not send notification: $e');
+    // This is optional, so don't worry if it fails
+  }
+}
+
+
+  // Test Firestore Connection Method
+  Future<void> _testFirestoreConnection() async {
+    try {
+      print('=== TESTING FIRESTORE CONNECTION ===');
+      
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print('No user logged in for test');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please login first for test')),
+        );
+        return;
+      }
+
+      // Test write
+      print('Testing write to pickup_requests...');
+      await FirebaseFirestore.instance.collection('test_pickups').add({
+        'userId': user.uid,
+        'test': 'connection test',
+        'timestamp': Timestamp.now(),
+      });
+      print('Test write successful');
+      
+      // Test read
+      print('Testing read from test_pickups...');
+      final query = await FirebaseFirestore.instance
+          .collection('test_pickups')
+          .where('userId', isEqualTo: user.uid)
+          .limit(1)
+          .get();
+      print('Test read successful: ${query.docs.length} documents');
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Firestore connection test successful!'),
+          backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
+      print('Firestore test failed: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.error, color: Colors.white),
-              SizedBox(width: 10),
-              Expanded(
-                child: Text('Error: ${e.toString()}'),
-              ),
-            ],
-          ),
+          content: Text('Firestore error: ${e.toString()}'),
           backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
         ),
       );
-    } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
     }
   }
 
@@ -392,6 +532,13 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
           icon: Icon(Icons.arrow_back, color: Color(0xFF2C3E34)),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.cloud_upload, color: Color(0xFF2C3E34)),
+            onPressed: _testFirestoreConnection,
+            tooltip: 'Test Firestore Connection',
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -812,9 +959,58 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
                           width: 1,
                         ),
                       ),
-                     
+                      child: Row(
+                        children: [
+                          Icon(Icons.info, color: Color(0xFFFF9800), size: 20),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Your pickup will be confirmed within 24 hours. You will receive a notification when a collector accepts your request.',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF666666),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
-                    )// SizedBox(height: 40),
+                    SizedBox(height: 20),
+
+                    // Debug Section (remove in production)
+                    Container(
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Debug Info:',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'User: ${FirebaseAuth.instance.currentUser?.email ?? "Not logged in"}',
+                            style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                          ),
+                          Text(
+                            'Fields filled: ${selectedDate != null && selectedTime != null && locationController.text.isNotEmpty ? "Complete" : "Incomplete"}',
+                            style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 40),
                   ],
                 ),
               ),
@@ -933,7 +1129,6 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
     }
   }
 }
-
 
 
 
