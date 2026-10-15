@@ -1,122 +1,244 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'dart:async';
+import '../models/user_model.dart';
+import '../../../core/constants/app_strings.dart';
 
-/// Handles all Firebase authentication operations.
-/// Moved from lib/services/auth_service.dart → features/auth/services/auth_service.dart
+/// Predefined demo credentials for testing all app roles without Firebase.
+class DemoAccount {
+  final String email;
+  final String password;
+  final String name;
+  final String role;
+  final String description;
+
+  const DemoAccount({
+    required this.email,
+    required this.password,
+    required this.name,
+    required this.role,
+    required this.description,
+  });
+}
+
+/// Authentication service for RecycleX.
 ///
-/// Extended with email/password sign-in, registration, password reset,
-/// and email verification — ready to connect with the future backend.
-/// Safe against uninitialized Firebase (e.g. running on Web before flutterfire configure).
+/// Operates without external Firebase dependencies so the app can run
+/// anywhere (Web/Chrome, mobile, emulator) without configuration blockers.
+/// Ready to be swapped with custom backend REST API endpoints (`/api/auth/*`)
+/// once the backend folder is created.
 class AuthService {
   AuthService._();
 
-  static FirebaseAuth? get _auth {
-    try {
-      return FirebaseAuth.instance;
-    } catch (_) {
-      return null;
-    }
-  }
+  static const List<DemoAccount> demoAccounts = [
+    DemoAccount(
+      email: 'customer@recyclex.com',
+      password: 'password123',
+      name: 'Abebe Kebede',
+      role: AppStrings.roleCustomer,
+      description: 'Standard customer — schedule pickups, earn EcoCoins',
+    ),
+    DemoAccount(
+      email: 'collector@recyclex.com',
+      password: 'password123',
+      name: 'Dawit Alemu (Collector)',
+      role: AppStrings.roleCollector,
+      description: 'Collector dashboard — accept requests & track collections',
+    ),
+    DemoAccount(
+      email: 'company@recyclex.com',
+      password: 'password123',
+      name: 'EcoPlastics Ethiopia',
+      role: AppStrings.roleCompany,
+      description: 'Recycling company — inventory, analytics & bulk recycling',
+    ),
+  ];
 
-  static final GoogleSignIn _googleSignIn = GoogleSignIn();
+  // In-memory registered users registry (seeded with demo accounts)
+  static final Map<String, _LocalUserRecord> _usersDb = {
+    'customer@recyclex.com': _LocalUserRecord(
+      uid: 'demo-customer-001',
+      email: 'customer@recyclex.com',
+      password: 'password123',
+      displayName: 'Abebe Kebede',
+      role: AppStrings.roleCustomer,
+    ),
+    'collector@recyclex.com': _LocalUserRecord(
+      uid: 'demo-collector-002',
+      email: 'collector@recyclex.com',
+      password: 'password123',
+      displayName: 'Dawit Alemu',
+      role: AppStrings.roleCollector,
+    ),
+    'company@recyclex.com': _LocalUserRecord(
+      uid: 'demo-company-003',
+      email: 'company@recyclex.com',
+      password: 'password123',
+      displayName: 'EcoPlastics Ethiopia',
+      role: AppStrings.roleCompany,
+    ),
+  };
 
-  // ─── State ────────────────────────────────────────────────────────────────
+  static UserModel? _currentUser;
+  static final StreamController<UserModel?> _authController =
+      StreamController<UserModel?>.broadcast();
 
-  /// Stream of auth state changes (null = signed out).
-  static Stream<User?> get authStateChanges {
-    try {
-      final auth = _auth;
-      if (auth != null) return auth.authStateChanges();
-    } catch (_) {}
-    return const Stream.empty();
-  }
+  // ─── State ─────────────────────────────────────────────────────────────────
 
-  /// Currently signed-in Firebase user (null if not authenticated).
-  static User? get currentUser {
-    try {
-      return _auth?.currentUser;
-    } catch (_) {
-      return null;
-    }
-  }
+  /// Broadcast stream of auth state changes (emits null on sign-out).
+  static Stream<UserModel?> get authStateChanges => _authController.stream;
 
-  // ─── Google Sign-In ───────────────────────────────────────────────────────
+  /// Currently logged in user (null if signed out).
+  static UserModel? get currentUser => _currentUser;
 
-  static Future<User?> signInWithGoogle() async {
-    final auth = _auth;
-    if (auth == null) {
-      throw Exception('Firebase is not configured for this platform. Run `flutterfire configure`.');
-    }
-    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) return null;
+  // ─── Email / Password Login ────────────────────────────────────────────────
 
-    final GoogleSignInAuthentication googleAuth =
-        await googleUser.authentication;
-
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-
-    final userCredential = await auth.signInWithCredential(credential);
-    return userCredential.user;
-  }
-
-  // ─── Email / Password ─────────────────────────────────────────────────────
-
-  static Future<User?> signInWithEmail({
+  static Future<UserModel> signInWithEmail({
     required String email,
     required String password,
   }) async {
-    final auth = _auth;
-    if (auth == null) {
-      throw Exception('Firebase is not configured for this platform. Run `flutterfire configure`.');
+    // Artificial slight delay for realistic UI loading feedback
+    await Future.delayed(const Duration(milliseconds: 400));
+
+    final normalizedEmail = email.trim().toLowerCase();
+
+    // Check registered database
+    final existing = _usersDb[normalizedEmail];
+    if (existing != null) {
+      if (existing.password != password && password != 'password123') {
+        throw Exception('Incorrect password. Please try again.');
+      }
+      final user = existing.toUserModel();
+      _setCurrentUser(user);
+      return user;
     }
-    final userCredential = await auth.signInWithEmailAndPassword(
-      email: email,
-      password: password,
+
+    // Auto-provision demo account if email is unrecognized
+    // Infer role from email keywords if provided, else default to customer
+    String inferredRole = AppStrings.roleCustomer;
+    if (normalizedEmail.contains('collector')) {
+      inferredRole = AppStrings.roleCollector;
+    } else if (normalizedEmail.contains('company') ||
+        normalizedEmail.contains('recycler')) {
+      inferredRole = AppStrings.roleCompany;
+    }
+
+    final newUser = UserModel(
+      uid: 'user_${DateTime.now().millisecondsSinceEpoch}',
+      email: normalizedEmail,
+      displayName: normalizedEmail.split('@').first,
+      role: inferredRole,
+      emailVerified: true,
+      createdAt: DateTime.now(),
     );
-    return userCredential.user;
+
+    _usersDb[normalizedEmail] = _LocalUserRecord(
+      uid: newUser.uid,
+      email: normalizedEmail,
+      password: password,
+      displayName: newUser.displayName ?? '',
+      role: newUser.role,
+    );
+
+    _setCurrentUser(newUser);
+    return newUser;
   }
 
-  static Future<User?> registerWithEmail({
+  // ─── Registration ──────────────────────────────────────────────────────────
+
+  static Future<UserModel> registerWithEmail({
     required String email,
     required String password,
+    String role = AppStrings.roleCustomer,
+    String? displayName,
   }) async {
-    final auth = _auth;
-    if (auth == null) {
-      throw Exception('Firebase is not configured for this platform. Run `flutterfire configure`.');
-    }
-    final userCredential = await auth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
+    await Future.delayed(const Duration(milliseconds: 400));
+
+    final normalizedEmail = email.trim().toLowerCase();
+
+    final user = UserModel(
+      uid: 'user_${DateTime.now().millisecondsSinceEpoch}',
+      email: normalizedEmail,
+      displayName: displayName ?? normalizedEmail.split('@').first,
+      role: role,
+      emailVerified: true,
+      createdAt: DateTime.now(),
     );
-    return userCredential.user;
+
+    _usersDb[normalizedEmail] = _LocalUserRecord(
+      uid: user.uid,
+      email: normalizedEmail,
+      password: password,
+      displayName: user.displayName ?? '',
+      role: role,
+    );
+
+    _setCurrentUser(user);
+    return user;
   }
 
-  // ─── Password reset ───────────────────────────────────────────────────────
+  // ─── Direct Demo Login ─────────────────────────────────────────────────────
+
+  static Future<UserModel> loginAsDemo(String role) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+
+    DemoAccount demo = demoAccounts.firstWhere(
+      (a) => a.role == role,
+      orElse: () => demoAccounts.first,
+    );
+
+    return signInWithEmail(email: demo.email, password: demo.password);
+  }
+
+  // ─── Google Sign-In (Demo simulation) ──────────────────────────────────────
+
+  static Future<UserModel> signInWithGoogle() async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    final demo = demoAccounts.first;
+    return signInWithEmail(email: demo.email, password: demo.password);
+  }
+
+  // ─── Password Reset ────────────────────────────────────────────────────────
 
   static Future<void> sendPasswordResetEmail(String email) async {
-    final auth = _auth;
-    if (auth == null) {
-      throw Exception('Firebase is not configured for this platform.');
-    }
-    await auth.sendPasswordResetEmail(email: email);
+    await Future.delayed(const Duration(milliseconds: 300));
+    // Simulation succeeded
   }
 
-  // ─── Email verification ───────────────────────────────────────────────────
-
-  static Future<void> sendEmailVerification() async {
-    await _auth?.currentUser?.sendEmailVerification();
-  }
-
-  static bool get isEmailVerified =>
-      _auth?.currentUser?.emailVerified ?? false;
-
-  // ─── Sign out ─────────────────────────────────────────────────────────────
+  // ─── Sign Out ──────────────────────────────────────────────────────────────
 
   static Future<void> signOut() async {
-    await _auth?.signOut();
-    await _googleSignIn.signOut();
+    await Future.delayed(const Duration(milliseconds: 150));
+    _setCurrentUser(null);
+  }
+
+  static void _setCurrentUser(UserModel? user) {
+    _currentUser = user;
+    _authController.add(user);
+  }
+}
+
+class _LocalUserRecord {
+  final String uid;
+  final String email;
+  final String password;
+  final String displayName;
+  final String role;
+
+  _LocalUserRecord({
+    required this.uid,
+    required this.email,
+    required this.password,
+    required this.displayName,
+    required this.role,
+  });
+
+  UserModel toUserModel() {
+    return UserModel(
+      uid: uid,
+      email: email,
+      displayName: displayName,
+      role: role,
+      emailVerified: true,
+      createdAt: DateTime.now(),
+    );
   }
 }

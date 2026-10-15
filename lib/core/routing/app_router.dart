@@ -9,6 +9,8 @@ import '../../features/customer/presentation/pages/map_page.dart';
 import '../../features/collector/presentation/pages/collector_home_page.dart';
 import '../../features/company/presentation/pages/company_home_page.dart';
 import '../../features/collection/presentation/pages/schedule_pickup_page.dart';
+import '../../features/collection/presentation/pages/emergency_pickup.dart';
+import '../../features/collection/presentation/pages/notifications_page.dart';
 import '../../features/wallet/presentation/pages/wallet_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../core/constants/app_strings.dart';
@@ -85,8 +87,7 @@ class AppRouter {
         return _build(const SchedulePickupPage());
 
       case Routes.emergencyPickup:
-        // TODO: create EmergencyPickupPage
-        return _build(const SchedulePickupPage()); // temporary fallback
+        return _build(const EmergencyPickupPage());
 
       case Routes.map:
         // MapPage requires a LatLng argument
@@ -101,8 +102,7 @@ class AppRouter {
         return _build(const ProfilePage());
 
       case Routes.notifications:
-        // TODO: create NotificationsPage
-        return _build(const _PlaceholderPage(title: 'Notifications'));
+        return _build(const NotificationsPage());
 
       case Routes.collectionHistory:
         // TODO: create CollectionHistoryPage

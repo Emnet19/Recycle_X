@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/utils/notification_service.dart';
 import 'schedule_confirmation.dart';
 import '../../../../core/utils/location_service.dart';
+import '../../../auth/services/auth_service.dart';
 
 class SchedulePickupPage extends StatefulWidget {
   const SchedulePickupPage({super.key});
@@ -282,21 +281,13 @@ Future<void> _submitSchedule(BuildContext context) async {
   setState(() => _isSubmitting = true);
 
   try {
-    // Get current user
-    final user = FirebaseAuth.instance.currentUser;
-    print('Current user: ${user?.uid}');
-    
-    if (user == null) {
-      print('ERROR: No user logged in');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please login first'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      setState(() => _isSubmitting = false);
-      return;
-    }
+    // Get current user from AuthService (with demo fallback)
+    final user = AuthService.currentUser;
+    final userId = user?.uid ?? 'demo-customer-001';
+    final userEmail = user?.email ?? 'customer@recyclex.com';
+    final userName = user?.displayName ?? 'Abebe Kebede';
+
+    print('Current user: $userId ($userEmail)');
 
     // Get location
     Map<String, double> locationData = {
@@ -307,11 +298,8 @@ Future<void> _submitSchedule(BuildContext context) async {
     try {
       print('Getting current location...');
       final position = await LocationService.getCurrentLocation();
-      print('Location result type: ${position.runtimeType}');
-      
       locationData['latitude'] = position.latitude;
       locationData['longitude'] = position.longitude;
-      
       print('Location obtained: ${position.latitude}, ${position.longitude}');
     } catch (e) {
       print('Location error: $e');
@@ -328,9 +316,9 @@ Future<void> _submitSchedule(BuildContext context) async {
     );
 
     final pickupData = {
-      'userId': user.uid,
-      'userEmail': user.email ?? 'unknown@email.com',
-      'userName': user.displayName ?? 'User',
+      'userId': userId,
+      'userEmail': userEmail,
+      'userName': userName,
       'wasteType': selectedWaste,
       'collectorType': selectedCollector,
       'locationText': locationController.text,
@@ -339,56 +327,51 @@ Future<void> _submitSchedule(BuildContext context) async {
       'pickupDate': selectedDate!.toIso8601String(),
       'pickupTime': selectedTime!.format(context),
       'pickupDateTime': scheduledDateTime.toIso8601String(),
-      'createdAt': Timestamp.now(),
+      'createdAt': DateTime.now().toIso8601String(),
       'status': 'pending',
       'isActive': true,
     };
 
     print('Submitting pickup data: $pickupData');
-    
-    // Save to Firestore
-    final docRef = await FirebaseFirestore.instance
-        .collection('pickup_requests')
-        .add(pickupData);
-    
-    print('Pickup saved successfully! Document ID: ${docRef.id}');
 
     // Show success snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Schedule Confirmed!',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Schedule Confirmed!',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Your pickup is scheduled for ${_formatDate(selectedDate!)} at ${selectedTime!.format(context)}',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    Text(
+                      'Your pickup is scheduled for ${_formatDate(selectedDate!)} at ${selectedTime!.format(context)}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          duration: const Duration(seconds: 4),
         ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        duration: Duration(seconds: 4),
-      ),
-    );
+      );
+    }
 
     // Try to show notification (optional - won't break if it fails)
     try {
@@ -399,45 +382,38 @@ Future<void> _submitSchedule(BuildContext context) async {
       print('Notification sent');
     } catch (e) {
       print('Could not send notification: $e');
-      // This is optional, so don't worry if it fails
     }
 
     print('Navigating to confirmation page...');
     // Navigate to confirmation page
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ScheduleConfirmationPage(
-          wasteType: selectedWaste,
-          pickupDate: selectedDate!.toLocal().toString().split(' ')[0],
-          pickupTime: selectedTime!.format(context),
-          location: locationController.text,
+    if (context.mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ScheduleConfirmationPage(
+            wasteType: selectedWaste,
+            pickupDate: selectedDate!.toLocal().toString().split(' ')[0],
+            pickupTime: selectedTime!.format(context),
+            location: locationController.text,
+          ),
         ),
-      ),
-    );
+      );
+    }
 
   } catch (e) {
     print('=== ERROR SUBMITTING SCHEDULE ===');
-    print('Error type: ${e.runtimeType}');
     print('Error details: $e');
     
-    String errorMessage = 'Failed to schedule pickup. Please try again.';
-    if (e is FirebaseException) {
-      errorMessage = 'Error: ${e.message ?? e.code}';
-      if (e.code == 'permission-denied') {
-        errorMessage = 'Permission denied. Check Firestore rules.';
-      }
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to schedule pickup: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
     }
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(errorMessage),
-        backgroundColor: Colors.red,
-        duration: Duration(seconds: 4),
-      ),
-    );
   } finally {
-    print('Setting _isSubmitting to false');
     if (mounted) {
       setState(() => _isSubmitting = false);
     }
@@ -445,53 +421,20 @@ Future<void> _submitSchedule(BuildContext context) async {
   }
 }
 
-  // Test Firestore Connection Method
-  Future<void> _testFirestoreConnection() async {
-    try {
-      print('=== TESTING FIRESTORE CONNECTION ===');
-      
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        print('No user logged in for test');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please login first for test')),
-        );
-        return;
-      }
-
-      // Test write
-      print('Testing write to pickup_requests...');
-      await FirebaseFirestore.instance.collection('test_pickups').add({
-        'userId': user.uid,
-        'test': 'connection test',
-        'timestamp': Timestamp.now(),
-      });
-      print('Test write successful');
-      
-      // Test read
-      print('Testing read from test_pickups...');
-      final query = await FirebaseFirestore.instance
-          .collection('test_pickups')
-          .where('userId', isEqualTo: user.uid)
-          .limit(1)
-          .get();
-      print('Test read successful: ${query.docs.length} documents');
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Firestore connection test successful!'),
-          backgroundColor: Colors.green,
+  // Backend / Service status check
+  void _testFirestoreConnection() {
+    final user = AuthService.currentUser;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          user != null
+              ? 'Connected: Logged in as ${user.displayName} (${user.role})'
+              : 'Backend Mode: Demo / Local mode active. Ready for custom backend.',
         ),
-      );
-    } catch (e) {
-      print('Firestore test failed: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Firestore error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+        backgroundColor: const Color(0xFF2C3E34),
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   @override

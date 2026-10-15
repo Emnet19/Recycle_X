@@ -1,11 +1,10 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../../../core/constants/app_strings.dart';
 
 /// Drives auth state for the entire application.
-/// Listens to Firebase auth stream and exposes [currentUser] and [appUser].
+/// Listens to [AuthService.authStateChanges] and exposes [currentUser] and [appUser].
 ///
 /// The [appUser.role] field is used by [AppRouter] to decide which
 /// dashboard to navigate to after a successful login.
@@ -18,92 +17,115 @@ class AuthProvider extends ChangeNotifier {
   bool get loading => _loading;
   String? get error => _error;
   bool get isAuthenticated => _appUser != null;
-  String get userRole => _appUser?.role ?? '';
+  String get userRole => _appUser?.role ?? AppStrings.roleCustomer;
 
   AuthProvider() {
-    // Listen for Firebase auth state changes
+    // Seed with current user if already logged in
+    _appUser = AuthService.currentUser;
+    // Listen for auth state changes
     AuthService.authStateChanges.listen(_onAuthStateChanged);
   }
 
-  void _onAuthStateChanged(User? firebaseUser) {
-    if (firebaseUser == null) {
-      _appUser = null;
-    } else {
-      // TODO: fetch full UserModel (with role) from backend using firebaseUser.uid.
-      // For now, create a temporary UserModel from Firebase data only.
-      // Role defaults to 'customer'; role selection screen handles the real role.
-      _appUser = UserModel(
-        uid: firebaseUser.uid,
-        email: firebaseUser.email ?? '',
-        displayName: firebaseUser.displayName,
-        photoUrl: firebaseUser.photoURL,
-        role: AppStrings.roleCustomer,
-        emailVerified: firebaseUser.emailVerified,
-      );
-    }
+  void _onAuthStateChanged(UserModel? user) {
+    _appUser = user;
     notifyListeners();
   }
 
-  // ─── Google ───────────────────────────────────────────────────────────────
-  Future<void> signInWithGoogle() async {
+  // ─── Direct Demo Login ─────────────────────────────────────────────────────
+  Future<bool> loginAsDemo(String role) async {
     _setLoading(true);
     try {
-      await AuthService.signInWithGoogle();
+      final user = await AuthService.loginAsDemo(role);
+      _appUser = user;
       _error = null;
+      notifyListeners();
+      return true;
     } catch (e) {
-      _error = e.toString();
+      _error = e.toString().replaceAll('Exception: ', '');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // ─── Google ────────────────────────────────────────────────────────────────
+  Future<bool> signInWithGoogle() async {
+    _setLoading(true);
+    try {
+      final user = await AuthService.signInWithGoogle();
+      _appUser = user;
+      _error = null;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      return false;
     } finally {
       _setLoading(false);
     }
   }
 
   // ─── Email / Password login ────────────────────────────────────────────────
-  Future<void> signInWithEmail({
+  Future<bool> signInWithEmail({
     required String email,
     required String password,
   }) async {
     _setLoading(true);
     try {
-      await AuthService.signInWithEmail(email: email, password: password);
+      final user = await AuthService.signInWithEmail(email: email, password: password);
+      _appUser = user;
       _error = null;
+      notifyListeners();
+      return true;
     } catch (e) {
-      _error = _friendlyError(e);
+      _error = e.toString().replaceAll('Exception: ', '');
+      return false;
     } finally {
       _setLoading(false);
     }
   }
 
-  // ─── Registration ─────────────────────────────────────────────────────────
-  Future<void> registerWithEmail({
+  // ─── Registration ──────────────────────────────────────────────────────────
+  Future<bool> registerWithEmail({
     required String email,
     required String password,
+    String role = AppStrings.roleCustomer,
+    String? displayName,
   }) async {
     _setLoading(true);
     try {
-      await AuthService.registerWithEmail(email: email, password: password);
-      await AuthService.sendEmailVerification();
+      final user = await AuthService.registerWithEmail(
+        email: email,
+        password: password,
+        role: role,
+        displayName: displayName,
+      );
+      _appUser = user;
       _error = null;
+      notifyListeners();
+      return true;
     } catch (e) {
-      _error = _friendlyError(e);
+      _error = e.toString().replaceAll('Exception: ', '');
+      return false;
     } finally {
       _setLoading(false);
     }
   }
 
-  // ─── Password reset ───────────────────────────────────────────────────────
+  // ─── Password reset ────────────────────────────────────────────────────────
   Future<void> sendPasswordResetEmail(String email) async {
     _setLoading(true);
     try {
       await AuthService.sendPasswordResetEmail(email);
       _error = null;
     } catch (e) {
-      _error = _friendlyError(e);
+      _error = e.toString().replaceAll('Exception: ', '');
     } finally {
       _setLoading(false);
     }
   }
 
-  // ─── Sign out ─────────────────────────────────────────────────────────────
+  // ─── Sign out ──────────────────────────────────────────────────────────────
   Future<void> signOut() async {
     _setLoading(true);
     try {
@@ -111,13 +133,13 @@ class AuthProvider extends ChangeNotifier {
       _appUser = null;
       _error = null;
     } catch (e) {
-      _error = e.toString();
+      _error = e.toString().replaceAll('Exception: ', '');
     } finally {
       _setLoading(false);
     }
   }
 
-  // ─── Helpers ──────────────────────────────────────────────────────────────
+  // ─── Helpers ───────────────────────────────────────────────────────────────
   void _setLoading(bool value) {
     _loading = value;
     notifyListeners();
@@ -126,27 +148,5 @@ class AuthProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
-  }
-
-  String _friendlyError(dynamic e) {
-    if (e is FirebaseAuthException) {
-      switch (e.code) {
-        case 'user-not-found':
-          return 'No account found for this email.';
-        case 'wrong-password':
-          return 'Incorrect password.';
-        case 'email-already-in-use':
-          return 'This email is already registered.';
-        case 'invalid-email':
-          return 'Please enter a valid email address.';
-        case 'weak-password':
-          return 'Password should be at least 6 characters.';
-        case 'too-many-requests':
-          return 'Too many attempts. Please try again later.';
-        default:
-          return e.message ?? 'Authentication failed.';
-      }
-    }
-    return e.toString();
   }
 }

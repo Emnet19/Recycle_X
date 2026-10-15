@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/routing/app_router.dart';
 
 /// Registration screen.
-/// The existing signup.dart was empty — this is the full implementation.
+/// Allows new users to create an account and immediately access the app
+/// with their chosen role (Customer, Collector, Company).
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -15,6 +17,7 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
@@ -26,6 +29,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
@@ -41,14 +45,31 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    await auth.registerWithEmail(
+    final success = await auth.registerWithEmail(
       email: _emailController.text.trim(),
       password: _passwordController.text,
+      role: _selectedRole,
+      displayName: _nameController.text.trim().isNotEmpty
+          ? _nameController.text.trim()
+          : null,
     );
 
-    if (auth.error != null && mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(auth.error!)));
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Welcome to RecycleX as a ${_selectedRole.toUpperCase()}!'),
+          backgroundColor: Colors.green.shade700,
+        ),
+      );
+      final route = AppRouter.homeRouteForRole(_selectedRole);
+      Navigator.pushReplacementNamed(context, route);
+    } else if (auth.error != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(auth.error!),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
       auth.clearError();
     }
   }
@@ -67,7 +88,7 @@ class _RegisterPageState extends State<RegisterPage> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(28),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Form(
             key: _formKey,
             child: Column(
@@ -86,24 +107,49 @@ class _RegisterPageState extends State<RegisterPage> {
                   'Create your account and start recycling.',
                   style: TextStyle(color: AppColors.textSecondary),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
 
                 // ── Role picker ──────────────────────────────────────
                 const Text(
-                  'I am a...',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                  'I am joining as a:',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 _rolePicker(),
                 const SizedBox(height: 20),
+
+                // ── Full Name ────────────────────────────────────────
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Full Name',
+                    hintText: 'e.g. Abebe Kebede',
+                    prefixIcon: const Icon(Icons.person_outline),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: AppColors.surface,
+                  ),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Please enter your name'
+                      : null,
+                ),
+                const SizedBox(height: 16),
 
                 // ── Email ────────────────────────────────────────────
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: AppStrings.emailLabel,
-                    prefixIcon: Icon(Icons.email_outlined),
+                    hintText: 'e.g. user@example.com',
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: AppColors.surface,
                   ),
                   validator: (v) => (v == null || !v.contains('@'))
                       ? 'Enter a valid email'
@@ -118,6 +164,11 @@ class _RegisterPageState extends State<RegisterPage> {
                   decoration: InputDecoration(
                     labelText: AppStrings.passwordLabel,
                     prefixIcon: const Icon(Icons.lock_outline),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: AppColors.surface,
                     suffixIcon: IconButton(
                       icon: Icon(_obscurePassword
                           ? Icons.visibility_off
@@ -139,6 +190,11 @@ class _RegisterPageState extends State<RegisterPage> {
                   decoration: InputDecoration(
                     labelText: 'Confirm Password',
                     prefixIcon: const Icon(Icons.lock_outline),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: AppColors.surface,
                     suffixIcon: IconButton(
                       icon: Icon(_obscureConfirm
                           ? Icons.visibility_off
@@ -156,19 +212,33 @@ class _RegisterPageState extends State<RegisterPage> {
                 // ── Register button ──────────────────────────────────
                 SizedBox(
                   width: double.infinity,
+                  height: 50,
                   child: ElevatedButton(
                     onPressed:
                         auth.loading ? null : () => _register(auth),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                     child: auth.loading
                         ? const SizedBox(
-                            height: 20,
-                            width: 20,
+                            height: 22,
+                            width: 22,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               color: Colors.white,
                             ),
                           )
-                        : const Text(AppStrings.signup),
+                        : const Text(
+                            AppStrings.signup,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -214,7 +284,7 @@ class _RegisterPageState extends State<RegisterPage> {
             onTap: () => setState(() => _selectedRole = value),
             child: Container(
               margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 color: selected ? AppColors.primary : AppColors.surface,
                 borderRadius: BorderRadius.circular(12),
@@ -222,6 +292,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   color: selected
                       ? AppColors.primary
                       : Colors.black12,
+                  width: selected ? 2 : 1,
                 ),
               ),
               child: Column(
