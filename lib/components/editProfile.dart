@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../services/user_service.dart';
-import 'HomePage.dart';
+import '../core/utils/user_service.dart';
 
 class EditProfilePage extends StatefulWidget {
   final bool isFirstTime;
@@ -124,10 +123,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       await Future.delayed(const Duration(seconds: 2));
       
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => RecycleXHome()),
-      );
+      Navigator.pop(context);
 
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

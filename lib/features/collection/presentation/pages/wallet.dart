@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import '../services/wallet_service.dart';
-import '../models/transaction_model.dart';
+import '../../../../core/utils/wallet_service.dart';
+import '../../../../models/transaction_model.dart';
 
 class EcoWalletPage extends StatefulWidget {
   const EcoWalletPage({super.key});

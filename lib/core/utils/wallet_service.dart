@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/transaction_model.dart';
+import '../../models/transaction_model.dart';
 
 class WalletService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;

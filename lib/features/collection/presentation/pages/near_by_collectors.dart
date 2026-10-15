@@ -1,11 +1,8 @@
 
 
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class NearbyCollectorsPage extends StatefulWidget {
   const NearbyCollectorsPage({super.key});
@@ -137,7 +134,9 @@ class _NearbyCollectorsPageState extends State<NearbyCollectorsPage> {
 
     try {
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
       
       setState(() {
@@ -154,19 +153,20 @@ class _NearbyCollectorsPageState extends State<NearbyCollectorsPage> {
       // Add current location marker
       _addCurrentLocationMarker();
     } catch (e) {
-      print('Error getting location: $e');
       // Use default location (Addis Ababa)
       setState(() {
-  _currentPosition = Position.fromMap({
-  'latitude': 9.0054,
-  'longitude': 38.7636,
-  'timestamp': DateTime.now().millisecondsSinceEpoch,
-  'accuracy': 0.0,
-  'altitude': 0.0,
-  'heading': 0.0,
-  'speed': 0.0,
-  'speed_accuracy': 0.0,
-});
+        _currentPosition = Position(
+          latitude: 9.0054,
+          longitude: 38.7636,
+          timestamp: DateTime.now(),
+          accuracy: 0.0,
+          altitude: 0.0,
+          altitudeAccuracy: 0.0,
+          heading: 0.0,
+          headingAccuracy: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+        );
       });
     }
   }
