@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../../../core/constants/app_colors.dart';
 
 class NearbyCollectorsPage extends StatefulWidget {
   const NearbyCollectorsPage({super.key});
@@ -19,14 +20,14 @@ class _NearbyCollectorsPageState extends State<NearbyCollectorsPage> {
   bool _isLoading = true;
   String _selectedFilter = 'all';
 
-  // Sample collector data (in real app, this would come from API)
+  // Sample collector data
   final List<Collector> _allCollectors = [
     Collector(
       id: '1',
-      name: 'Green Waste Collectors',
+      name: 'Green Waste Solutions',
       location: LatLng(9.0054, 38.7636), // Addis Ababa coordinates
       address: 'Bole, Addis Ababa',
-      rating: 4.5,
+      rating: 4.8,
       reviews: 128,
       type: 'Company',
       status: 'Available',
@@ -38,62 +39,62 @@ class _NearbyCollectorsPageState extends State<NearbyCollectorsPage> {
     ),
     Collector(
       id: '2',
-      name: 'Eco Warriors',
+      name: 'Green Community Team',
       location: LatLng(9.0100, 38.7700),
       address: 'Megenagna, Addis Ababa',
-      rating: 4.2,
-      reviews: 89,
-      type: 'Individual',
+      rating: 4.9,
+      reviews: 142,
+      type: 'Community Collector',
       status: 'Available',
-      distance: 2.5,
+      distance: 1.8,
       phone: '+251 912 345 678',
-      workingHours: '9 AM - 5 PM',
-      services: ['Plastic', 'Metal'],
+      workingHours: '8 AM - 6 PM',
+      services: ['Plastic', 'Metal', 'Glass', 'Paper'],
       imageUrl: 'https://example.com/collector2.jpg',
     ),
     Collector(
       id: '3',
-      name: 'Clean City Team',
+      name: 'Kebele 08 Municipal Team',
       location: LatLng(9.0150, 38.7550),
-      address: 'Kazanchis, Addis Ababa',
-      rating: 4.8,
+      address: 'Kazanchis Kebele 08, Addis Ababa',
+      rating: 4.9,
       reviews: 256,
-      type: 'Company',
-      status: 'Busy',
-      distance: 3.1,
+      type: 'Kebele Collector',
+      status: 'Available',
+      distance: 2.1,
       phone: '+251 913 456 789',
-      workingHours: '7 AM - 7 PM',
-      services: ['Plastic', 'Paper', 'Glass', 'Electronics'],
+      workingHours: '7 AM - 6 PM',
+      services: ['Plastic', 'Organic', 'Paper', 'Glass'],
       imageUrl: 'https://example.com/collector3.jpg',
     ),
     Collector(
       id: '4',
-      name: 'Recycle Masters',
+      name: 'Kebele 03 Municipal Sanitation',
       location: LatLng(8.9950, 38.7500),
-      address: 'Piassa, Addis Ababa',
-      rating: 4.0,
-      reviews: 67,
-      type: 'Individual',
+      address: 'Piassa Kebele 03, Addis Ababa',
+      rating: 4.7,
+      reviews: 89,
+      type: 'Kebele Collector',
       status: 'Available',
-      distance: 4.0,
+      distance: 3.4,
       phone: '+251 914 567 890',
-      workingHours: '10 AM - 4 PM',
-      services: ['Plastic', 'Paper'],
+      workingHours: '7 AM - 5 PM',
+      services: ['Plastic', 'Paper', 'Hazardous'],
       imageUrl: 'https://example.com/collector4.jpg',
     ),
     Collector(
       id: '5',
-      name: 'Eco Solutions PLC',
+      name: 'Youth Eco Action Cooperative',
       location: LatLng(9.0200, 38.7800),
-      address: 'CMC, Addis Ababa',
-      rating: 4.7,
-      reviews: 189,
-      type: 'Company',
+      address: 'CMC Zone 2, Addis Ababa',
+      rating: 4.8,
+      reviews: 115,
+      type: 'Community Collector',
       status: 'Available',
-      distance: 5.2,
+      distance: 4.2,
       phone: '+251 915 678 901',
-      workingHours: '24/7',
-      services: ['All Types'],
+      workingHours: '8 AM - 6 PM',
+      services: ['Plastic', 'Electronics', 'Metal'],
       imageUrl: 'https://example.com/collector5.jpg',
     ),
   ];
@@ -245,10 +246,12 @@ class _NearbyCollectorsPageState extends State<NearbyCollectorsPage> {
       _selectedFilter = filter;
       if (filter == 'available') {
         _collectors = _allCollectors.where((c) => c.status == 'Available').toList();
+      } else if (filter == 'kebele') {
+        _collectors = _allCollectors.where((c) => c.type == 'Kebele Collector').toList();
+      } else if (filter == 'community') {
+        _collectors = _allCollectors.where((c) => c.type == 'Community Collector').toList();
       } else if (filter == 'company') {
         _collectors = _allCollectors.where((c) => c.type == 'Company').toList();
-      } else if (filter == 'individual') {
-        _collectors = _allCollectors.where((c) => c.type == 'Individual').toList();
       } else {
         _collectors = _allCollectors;
       }
@@ -271,7 +274,7 @@ class _NearbyCollectorsPageState extends State<NearbyCollectorsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: Column(
         children: [
           // Map Section
@@ -301,7 +304,7 @@ class _NearbyCollectorsPageState extends State<NearbyCollectorsPage> {
                     mini: true,
                     backgroundColor: Colors.white,
                     onPressed: _getCurrentLocation,
-                    child: Icon(Icons.my_location, color: Colors.green[700]),
+                    child: const Icon(Icons.my_location, color: AppColors.greenText),
                   ),
                 ),
               ],
@@ -312,7 +315,7 @@ class _NearbyCollectorsPageState extends State<NearbyCollectorsPage> {
           Expanded(
             flex: 2,
             child: Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(20),
@@ -330,20 +333,20 @@ class _NearbyCollectorsPageState extends State<NearbyCollectorsPage> {
                 children: [
                   // Header
                   Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
+                        const Text(
                           'Nearby Collectors',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Colors.green[800],
+                            color: AppColors.greenText,
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.refresh),
+                          icon: const Icon(Icons.refresh),
                           onPressed: () {
                             setState(() => _isLoading = true);
                             _loadCollectors();
@@ -354,33 +357,34 @@ class _NearbyCollectorsPageState extends State<NearbyCollectorsPage> {
                   ),
                   
                   // Filter Chips
-                  Container(
-                    height: 50,
+                  SizedBox(
+                    height: 48,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
-                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       children: [
                         _buildFilterChip('All', 'all'),
-                        _buildFilterChip('Available', 'available'),
+                        _buildFilterChip('Kebele Collectors', 'kebele'),
+                        _buildFilterChip('Community Collectors', 'community'),
                         _buildFilterChip('Companies', 'company'),
-                        _buildFilterChip('Individuals', 'individual'),
+                        _buildFilterChip('Available', 'available'),
                       ],
                     ),
                   ),
                   
                   // Sort Dropdown
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Row(
                       children: [
                         Icon(Icons.sort, size: 20, color: Colors.grey[600]),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text('Sort by:', style: TextStyle(color: Colors.grey[600])),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: 'distance',
-                            items: [
+                            items: const [
                               DropdownMenuItem(value: 'distance', child: Text('Distance')),
                               DropdownMenuItem(value: 'rating', child: Text('Rating')),
                               DropdownMenuItem(value: 'name', child: Text('Name')),
@@ -395,14 +399,14 @@ class _NearbyCollectorsPageState extends State<NearbyCollectorsPage> {
                   // Collectors List
                   Expanded(
                     child: _isLoading
-                        ? Center(child: CircularProgressIndicator())
+                        ? const Center(child: CircularProgressIndicator())
                         : _collectors.isEmpty
                             ? Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(Icons.search_off, size: 60, color: Colors.grey[400]),
-                                    SizedBox(height: 16),
+                                    const SizedBox(height: 16),
                                     Text(
                                       'No collectors found in your area',
                                       style: TextStyle(color: Colors.grey[600]),
@@ -411,7 +415,7 @@ class _NearbyCollectorsPageState extends State<NearbyCollectorsPage> {
                                 ),
                               )
                             : ListView.builder(
-                                padding: EdgeInsets.all(8),
+                                padding: const EdgeInsets.all(8),
                                 itemCount: _collectors.length,
                                 itemBuilder: (context, index) {
                                   return CollectorCard(
@@ -431,26 +435,35 @@ class _NearbyCollectorsPageState extends State<NearbyCollectorsPage> {
       // Request Pickup Button
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // Navigate to pickup request page
+          Navigator.pushNamed(context, '/schedule-pickup');
         },
-        backgroundColor: Colors.green[700],
-        icon: Icon(Icons.local_shipping),
-        label: Text('Request Pickup'),
+        backgroundColor: AppColors.buttonGreen,
+        foregroundColor: AppColors.greenText,
+        icon: const Icon(Icons.local_shipping_rounded, color: AppColors.greenText),
+        label: const Text(
+          'Request Pickup',
+          style: TextStyle(
+            color: AppColors.greenText,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildFilterChip(String label, String value) {
+    final isSelected = _selectedFilter == value;
     return Padding(
-      padding: EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
         label: Text(label),
-        selected: _selectedFilter == value,
+        selected: isSelected,
         onSelected: (_) => _filterCollectors(value),
-        selectedColor: Colors.green[100],
-        backgroundColor: Colors.grey[100],
+        selectedColor: AppColors.buttonGreen.withValues(alpha: 0.35),
+        backgroundColor: Colors.grey.shade100,
         labelStyle: TextStyle(
-          color: _selectedFilter == value ? Colors.green[700] : Colors.grey[700],
+          color: isSelected ? AppColors.greenText : Colors.grey.shade800,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
     );

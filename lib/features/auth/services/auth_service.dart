@@ -34,14 +34,21 @@ class AuthService {
       password: 'password123',
       name: 'Abebe Kebede',
       role: AppStrings.roleCustomer,
-      description: 'Standard customer — schedule pickups, earn EcoCoins',
+      description: 'Customer account — schedule pickups & earn EcoCoins',
     ),
     DemoAccount(
-      email: 'collector@recyclex.com',
+      email: 'kebele.collector@recyclex.com',
       password: 'password123',
-      name: 'Dawit Alemu (Collector)',
-      role: AppStrings.roleCollector,
-      description: 'Collector dashboard — accept requests & track collections',
+      name: 'Tadesse Worku (Kebele 08 Team)',
+      role: AppStrings.roleKebeleCollector,
+      description: 'Kebele Collector — municipal zone routes & neighborhood bins',
+    ),
+    DemoAccount(
+      email: 'community.collector@recyclex.com',
+      password: 'password123',
+      name: 'Selamawit Desta (Green Community Team)',
+      role: AppStrings.roleCommunityCollector,
+      description: 'Community Collector — neighborhood cleanups & drop-off hubs',
     ),
     DemoAccount(
       email: 'company@recyclex.com',
@@ -60,20 +67,39 @@ class AuthService {
       password: 'password123',
       displayName: 'Abebe Kebede',
       role: AppStrings.roleCustomer,
+      ecoCoins: 100,
+      initialCoinsAwarded: true,
     ),
-    'collector@recyclex.com': _LocalUserRecord(
-      uid: 'demo-collector-002',
-      email: 'collector@recyclex.com',
+    'kebele.collector@recyclex.com': _LocalUserRecord(
+      uid: 'demo-kebele-002',
+      email: 'kebele.collector@recyclex.com',
       password: 'password123',
-      displayName: 'Dawit Alemu',
-      role: AppStrings.roleCollector,
+      displayName: 'Tadesse Worku (Kebele 08)',
+      role: AppStrings.roleKebeleCollector,
+      ecoCoins: 100,
+      initialCoinsAwarded: true,
+      collectorType: 'Kebele Collector',
+      zoneOrOrganization: 'Kebele 08 / Woreda 03',
+    ),
+    'community.collector@recyclex.com': _LocalUserRecord(
+      uid: 'demo-comm-003',
+      email: 'community.collector@recyclex.com',
+      password: 'password123',
+      displayName: 'Selamawit Desta',
+      role: AppStrings.roleCommunityCollector,
+      ecoCoins: 100,
+      initialCoinsAwarded: true,
+      collectorType: 'Community Collector',
+      zoneOrOrganization: 'Green Community Youth Cooperative',
     ),
     'company@recyclex.com': _LocalUserRecord(
-      uid: 'demo-company-003',
+      uid: 'demo-company-004',
       email: 'company@recyclex.com',
       password: 'password123',
       displayName: 'EcoPlastics Ethiopia',
       role: AppStrings.roleCompany,
+      ecoCoins: 100,
+      initialCoinsAwarded: true,
     ),
   };
 
@@ -114,8 +140,16 @@ class AuthService {
     // Auto-provision demo account if email is unrecognized
     // Infer role from email keywords if provided, else default to customer
     String inferredRole = AppStrings.roleCustomer;
-    if (normalizedEmail.contains('collector')) {
-      inferredRole = AppStrings.roleCollector;
+    String? collectorType;
+    if (normalizedEmail.contains('kebele')) {
+      inferredRole = AppStrings.roleKebeleCollector;
+      collectorType = 'Kebele Collector';
+    } else if (normalizedEmail.contains('community')) {
+      inferredRole = AppStrings.roleCommunityCollector;
+      collectorType = 'Community Collector';
+    } else if (normalizedEmail.contains('collector')) {
+      inferredRole = AppStrings.roleKebeleCollector;
+      collectorType = 'Kebele Collector';
     } else if (normalizedEmail.contains('company') ||
         normalizedEmail.contains('recycler')) {
       inferredRole = AppStrings.roleCompany;
@@ -128,6 +162,9 @@ class AuthService {
       role: inferredRole,
       emailVerified: true,
       createdAt: DateTime.now(),
+      ecoCoins: 100,
+      initialCoinsAwarded: true,
+      collectorType: collectorType,
     );
 
     _usersDb[normalizedEmail] = _LocalUserRecord(
@@ -136,6 +173,9 @@ class AuthService {
       password: password,
       displayName: newUser.displayName ?? '',
       role: newUser.role,
+      ecoCoins: 100,
+      initialCoinsAwarded: true,
+      collectorType: collectorType,
     );
 
     _setCurrentUser(newUser);
@@ -149,10 +189,21 @@ class AuthService {
     required String password,
     String role = AppStrings.roleCustomer,
     String? displayName,
+    String? collectorType,
+    String? zoneOrOrganization,
   }) async {
     await Future.delayed(const Duration(milliseconds: 400));
 
     final normalizedEmail = email.trim().toLowerCase();
+
+    // Check if user already exists
+    if (_usersDb.containsKey(normalizedEmail)) {
+      throw Exception('An account with this email already exists.');
+    }
+
+    // Requirement 4: Award 100 initial ecoCoins on first registration
+    const initialEcoCoins = 100;
+    const initialCoinsAwarded = true;
 
     final user = UserModel(
       uid: 'user_${DateTime.now().millisecondsSinceEpoch}',
@@ -161,6 +212,10 @@ class AuthService {
       role: role,
       emailVerified: true,
       createdAt: DateTime.now(),
+      ecoCoins: initialEcoCoins,
+      initialCoinsAwarded: initialCoinsAwarded,
+      collectorType: collectorType,
+      zoneOrOrganization: zoneOrOrganization,
     );
 
     _usersDb[normalizedEmail] = _LocalUserRecord(
@@ -169,6 +224,10 @@ class AuthService {
       password: password,
       displayName: user.displayName ?? '',
       role: role,
+      ecoCoins: initialEcoCoins,
+      initialCoinsAwarded: initialCoinsAwarded,
+      collectorType: collectorType,
+      zoneOrOrganization: zoneOrOrganization,
     );
 
     _setCurrentUser(user);
@@ -222,6 +281,10 @@ class _LocalUserRecord {
   final String password;
   final String displayName;
   final String role;
+  final int ecoCoins;
+  final bool initialCoinsAwarded;
+  final String? collectorType;
+  final String? zoneOrOrganization;
 
   _LocalUserRecord({
     required this.uid,
@@ -229,6 +292,10 @@ class _LocalUserRecord {
     required this.password,
     required this.displayName,
     required this.role,
+    this.ecoCoins = 100,
+    this.initialCoinsAwarded = true,
+    this.collectorType,
+    this.zoneOrOrganization,
   });
 
   UserModel toUserModel() {
@@ -239,6 +306,10 @@ class _LocalUserRecord {
       role: role,
       emailVerified: true,
       createdAt: DateTime.now(),
+      ecoCoins: ecoCoins,
+      initialCoinsAwarded: initialCoinsAwarded,
+      collectorType: collectorType,
+      zoneOrOrganization: zoneOrOrganization,
     );
   }
 }

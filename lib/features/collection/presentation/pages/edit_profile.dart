@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../../../../core/constants/app_colors.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -225,8 +226,8 @@ Future<void> _loadUserData() async {
               ),
             ],
           ),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 3),
+          backgroundColor: AppColors.greenText,
+          duration: const Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -289,19 +290,26 @@ Future<void> _loadUserData() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Edit Profile'),
-        backgroundColor: Colors.green[700],
-        foregroundColor: Colors.white,
+        title: const Text(
+          'Edit Profile',
+          style: TextStyle(
+            color: AppColors.greenText,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.greenText,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: AppColors.greenText),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           if (_isSaving)
-            Padding(
+            const Padding(
               padding: EdgeInsets.only(right: 16),
               child: Center(
                 child: SizedBox(
@@ -309,14 +317,14 @@ Future<void> _loadUserData() async {
                   height: 24,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                    valueColor: AlwaysStoppedAnimation(AppColors.greenText),
                   ),
                 ),
               ),
             )
           else
             IconButton(
-              icon: Icon(Icons.save),
+              icon: const Icon(Icons.save, color: AppColors.greenText),
               onPressed: () {
                 print(' Save button pressed!');
                 _saveProfile();
@@ -330,8 +338,8 @@ Future<void> _loadUserData() async {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 20),
+                  const CircularProgressIndicator(color: AppColors.greenText),
+                  const SizedBox(height: 20),
                   Text(
                     'Loading profile...',
                     style: TextStyle(
@@ -356,15 +364,15 @@ Future<void> _loadUserData() async {
                             children: [
                               CircleAvatar(
                                 radius: 60,
-                                backgroundColor: Colors.green[100],
+                                backgroundColor: AppColors.buttonGreen.withValues(alpha: 0.3),
                                 backgroundImage: _profileImage != null
                                     ? FileImage(_profileImage!)
                                     : null,
                                 child: _profileImage == null
-                                    ? Icon(
+                                    ? const Icon(
                                         Icons.person, 
                                         size: 50, 
-                                        color: Colors.green[700]
+                                        color: AppColors.greenText,
                                       )
                                     : null,
                               ),
@@ -372,9 +380,9 @@ Future<void> _loadUserData() async {
                                 bottom: 0,
                                 right: 0,
                                 child: Container(
-                                  padding: EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green[700],
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.greenText,
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
@@ -383,13 +391,13 @@ Future<void> _loadUserData() async {
                                       ),
                                     ],
                                   ),
-                                  child: Icon(Icons.camera_alt, size: 20, color: Colors.white),
+                                  child: const Icon(Icons.camera_alt, size: 20, color: Colors.white),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Text(
                           'Tap to change photo',
                           style: TextStyle(
@@ -401,26 +409,26 @@ Future<void> _loadUserData() async {
                     ),
                   ),
                   
-                  SizedBox(height: 30),
+                  const SizedBox(height: 30),
                   
                   // Name Field
                   TextFormField(
                     controller: _nameController,
                     decoration: InputDecoration(
                       labelText: 'Full Name *',
-                      prefixIcon: Icon(Icons.person_outline, color: Colors.green[700]),
+                      prefixIcon: const Icon(Icons.person_outline, color: AppColors.greenText),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: Colors.grey[400]!),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.green[700]!, width: 2),
+                        borderSide: const BorderSide(color: AppColors.greenText, width: 2),
                       ),
                     ),
                   ),
                   
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   
                   // Email Field (read-only)
                   TextFormField(
@@ -428,7 +436,7 @@ Future<void> _loadUserData() async {
                     readOnly: true,
                     decoration: InputDecoration(
                       labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined, color: Colors.green[700]),
+                      prefixIcon: const Icon(Icons.email_outlined, color: AppColors.greenText),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: Colors.grey[400]!),
@@ -438,47 +446,47 @@ Future<void> _loadUserData() async {
                     ),
                   ),
                   
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   
                   // Phone Field
                   TextFormField(
                     controller: _phoneController,
                     decoration: InputDecoration(
                       labelText: 'Phone Number',
-                      prefixIcon: Icon(Icons.phone_outlined, color: Colors.green[700]),
+                      prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.greenText),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: Colors.grey[400]!),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.green[700]!, width: 2),
+                        borderSide: const BorderSide(color: AppColors.greenText, width: 2),
                       ),
                     ),
                     keyboardType: TextInputType.phone,
                   ),
                   
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   
                   // Address Field
                   TextFormField(
                     controller: _addressController,
                     decoration: InputDecoration(
                       labelText: 'Address',
-                      prefixIcon: Icon(Icons.location_on_outlined, color: Colors.green[700]),
+                      prefixIcon: const Icon(Icons.location_on_outlined, color: AppColors.greenText),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: Colors.grey[400]!),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.green[700]!, width: 2),
+                        borderSide: const BorderSide(color: AppColors.greenText, width: 2),
                       ),
                     ),
                     maxLines: 2,
                   ),
                   
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   
                   // City Dropdown
                   Column(
@@ -492,9 +500,9 @@ Future<void> _loadUserData() async {
                           color: Colors.grey[700],
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey[400]!),
                           borderRadius: BorderRadius.circular(12),
@@ -503,8 +511,8 @@ Future<void> _loadUserData() async {
                           child: DropdownButton<String>(
                             value: _selectedCity,
                             isExpanded: true,
-                            icon: Icon(Icons.arrow_drop_down, color: Colors.green[700]),
-                            style: TextStyle(
+                            icon: const Icon(Icons.arrow_drop_down, color: AppColors.greenText),
+                            style: const TextStyle(
                               fontSize: 16,
                               color: Colors.black87,
                             ),
@@ -523,7 +531,7 @@ Future<void> _loadUserData() async {
                     ],
                   ),
                   
-                  SizedBox(height: 30),
+                  const SizedBox(height: 30),
                   
                   // Save Button
                   SizedBox(
@@ -535,16 +543,16 @@ Future<void> _loadUserData() async {
                         _saveProfile();
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[700],
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppColors.buttonGreen,
+                        foregroundColor: AppColors.buttonText,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                         elevation: 2,
-                        shadowColor: Colors.green[700]!.withOpacity(0.3),
+                        shadowColor: AppColors.buttonGreen.withValues(alpha: 0.3),
                       ),
                       child: _isSaving
-                          ? Row(
+                          ? const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 SizedBox(
@@ -552,7 +560,7 @@ Future<void> _loadUserData() async {
                                   height: 24,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                                    valueColor: AlwaysStoppedAnimation(AppColors.buttonText),
                                   ),
                                 ),
                                 SizedBox(width: 12),
@@ -561,20 +569,22 @@ Future<void> _loadUserData() async {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
+                                    color: AppColors.buttonText,
                                   ),
                                 ),
                               ],
                             )
-                          : Row(
+                          : const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.save, size: 22),
+                                Icon(Icons.save, size: 22, color: AppColors.buttonText),
                                 SizedBox(width: 12),
                                 Text(
                                   'Save Changes',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
+                                    color: AppColors.buttonText,
                                   ),
                                 ),
                               ],

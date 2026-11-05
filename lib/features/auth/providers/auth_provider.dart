@@ -91,6 +91,8 @@ class AuthProvider extends ChangeNotifier {
     required String password,
     String role = AppStrings.roleCustomer,
     String? displayName,
+    String? collectorType,
+    String? zoneOrOrganization,
   }) async {
     _setLoading(true);
     try {
@@ -99,6 +101,8 @@ class AuthProvider extends ChangeNotifier {
         password: password,
         role: role,
         displayName: displayName,
+        collectorType: collectorType,
+        zoneOrOrganization: zoneOrOrganization,
       );
       _appUser = user;
       _error = null;

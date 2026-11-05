@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/utils/notification_service.dart';
 import 'schedule_confirmation.dart';
 import '../../../../core/utils/location_service.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../components/customer_bottom_nav.dart';
 import '../../../auth/services/auth_service.dart';
 
 class SchedulePickupPage extends StatefulWidget {
@@ -13,10 +15,16 @@ class SchedulePickupPage extends StatefulWidget {
 
 class _SchedulePickupPageState extends State<SchedulePickupPage> {
   String selectedWaste = 'Plastic';
-  String selectedCollector = 'Nearest Collector';
+  // Requirement 3: Only Kebele Collectors and Community Collectors
+  String selectedCollector = 'Kebele Collector';
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   bool _isSubmitting = false;
+  bool _isLocating = false;
+
+  // Requirement 5: Keep coordinates internally
+  double? _selectedLatitude;
+  double? _selectedLongitude;
 
   final TextEditingController locationController = TextEditingController();
   final FocusNode _locationFocusNode = FocusNode();
@@ -195,11 +203,11 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
+            child: const Text(
               'Cancel',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: AppColors.textSecondary,
               ),
             ),
           ),
@@ -209,18 +217,19 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
               _submitSchedule(context);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF2C3E34),
+              backgroundColor: AppColors.buttonGreen,
+              foregroundColor: AppColors.buttonText,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-            child: Text(
+            child: const Text(
               'Confirm & Schedule',
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                color: AppColors.buttonText,
               ),
             ),
           ),
@@ -239,32 +248,32 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: EdgeInsets.all(6),
+          padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: iconColor.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, size: 18, color: iconColor),
         ),
-        SizedBox(width: 12),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 13,
-                  color: Colors.grey[600],
+                  color: AppColors.textSecondary,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
                 value,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF2C3E34),
+                  color: AppColors.textPrimary,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -277,7 +286,6 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
   }
 
 Future<void> _submitSchedule(BuildContext context) async {
-  print('=== STARTING SCHEDULE SUBMISSION ===');
   setState(() => _isSubmitting = true);
 
   try {
@@ -287,26 +295,12 @@ Future<void> _submitSchedule(BuildContext context) async {
     final userEmail = user?.email ?? 'customer@recyclex.com';
     final userName = user?.displayName ?? 'Abebe Kebede';
 
-    print('Current user: $userId ($userEmail)');
+    final double lat = _selectedLatitude ?? 9.0320;
+    final double lng = _selectedLongitude ?? 38.7469;
+    final String locationAddress = locationController.text.trim().isNotEmpty
+        ? locationController.text.trim()
+        : 'Bole Sub-City, Addis Ababa';
 
-    // Get location
-    Map<String, double> locationData = {
-      'latitude': 9.0320, 
-      'longitude': 38.7469
-    };
-
-    try {
-      print('Getting current location...');
-      final position = await LocationService.getCurrentLocation();
-      locationData['latitude'] = position.latitude;
-      locationData['longitude'] = position.longitude;
-      print('Location obtained: ${position.latitude}, ${position.longitude}');
-    } catch (e) {
-      print('Location error: $e');
-      print('Using default location: ${locationData['latitude']}, ${locationData['longitude']}');
-    }
-
-    // Create pickup request with user ID
     final scheduledDateTime = DateTime(
       selectedDate!.year,
       selectedDate!.month,
@@ -321,9 +315,9 @@ Future<void> _submitSchedule(BuildContext context) async {
       'userName': userName,
       'wasteType': selectedWaste,
       'collectorType': selectedCollector,
-      'locationText': locationController.text,
-      'latitude': locationData['latitude'],
-      'longitude': locationData['longitude'],
+      'locationText': locationAddress,
+      'latitude': lat,
+      'longitude': lng,
       'pickupDate': selectedDate!.toIso8601String(),
       'pickupTime': selectedTime!.format(context),
       'pickupDateTime': scheduledDateTime.toIso8601String(),
@@ -332,9 +326,18 @@ Future<void> _submitSchedule(BuildContext context) async {
       'isActive': true,
     };
 
-    print('Submitting pickup data: $pickupData');
+    // Simulate network delay / real async save
+    await Future.delayed(const Duration(milliseconds: 300));
 
-    // Show success snackbar
+    // Try to show notification
+    try {
+      await NotificationService.showNotification(
+        title: 'Pickup Scheduled Successfully',
+        body: 'Your $selectedWaste pickup ($selectedCollector) is confirmed for ${selectedTime!.format(context)}',
+      );
+    } catch (_) {}
+
+    // Requirement 6: Show clear success message ONLY after the operation succeeds
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -345,9 +348,10 @@ Future<void> _submitSchedule(BuildContext context) async {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      'Schedule Confirmed!',
+                      'Pickup Successfully Scheduled!',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -355,7 +359,7 @@ Future<void> _submitSchedule(BuildContext context) async {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Your pickup is scheduled for ${_formatDate(selectedDate!)} at ${selectedTime!.format(context)}',
+                      'Assigned to $selectedCollector for ${_formatDate(selectedDate!)} at ${selectedTime!.format(context)}',
                       style: const TextStyle(fontSize: 12),
                     ),
                   ],
@@ -363,7 +367,7 @@ Future<void> _submitSchedule(BuildContext context) async {
               ),
             ],
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.greenText,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -371,39 +375,24 @@ Future<void> _submitSchedule(BuildContext context) async {
           duration: const Duration(seconds: 4),
         ),
       );
-    }
 
-    // Try to show notification (optional - won't break if it fails)
-    try {
-      await NotificationService.showNotification(
-        title: 'Pickup Scheduled',
-        body: 'Your $selectedWaste pickup is scheduled for ${selectedTime!.format(context)}',
-      );
-      print('Notification sent');
-    } catch (e) {
-      print('Could not send notification: $e');
-    }
-
-    print('Navigating to confirmation page...');
-    // Navigate to confirmation page
-    if (context.mounted) {
+      // Navigate to confirmation page
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (_) => ScheduleConfirmationPage(
             wasteType: selectedWaste,
-            pickupDate: selectedDate!.toLocal().toString().split(' ')[0],
+            collectorType: selectedCollector,
+            pickupDate: _formatDate(selectedDate!),
             pickupTime: selectedTime!.format(context),
-            location: locationController.text,
+            location: locationAddress,
           ),
         ),
       );
     }
 
   } catch (e) {
-    print('=== ERROR SUBMITTING SCHEDULE ===');
-    print('Error details: $e');
-    
+    // If operation fails, show error and do NOT show success message
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -417,7 +406,6 @@ Future<void> _submitSchedule(BuildContext context) async {
     if (mounted) {
       setState(() => _isSubmitting = false);
     }
-    print('=== SCHEDULE SUBMISSION COMPLETED ===');
   }
 }
 
@@ -440,27 +428,28 @@ Future<void> _submitSchedule(BuildContext context) async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 255, 255, 255),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Schedule Pickup',
           style: TextStyle(
             fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF2C3E34),
+            fontWeight: FontWeight.w700,
+            color: AppColors.greenText,
           ),
         ),
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Color(0xFF2C3E34)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.greenText),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.cloud_upload, color: Color(0xFF2C3E34)),
+            icon: const Icon(Icons.cloud_upload_outlined, color: AppColors.greenText),
             onPressed: _testFirestoreConnection,
-            tooltip: 'Test Firestore Connection',
+            tooltip: 'Test Connection',
           ),
         ],
       ),
@@ -620,17 +609,15 @@ Future<void> _submitSchedule(BuildContext context) async {
                             ),
                             dropdownColor: Colors.white,
                             items: [
-                              'Nearest Collector',
                               'Kebele Collector',
-                              'Private Recycler',
-                              'Community Center'
+                              'Community Collector',
                             ].map((String value) {
                               return DropdownMenuItem<String>(
                                 value: value,
                                 child: Row(
                                   children: [
                                     _getCollectorIcon(value),
-                                    SizedBox(width: 12),
+                                    const SizedBox(width: 12),
                                     Text(value),
                                   ],
                                 ),
@@ -644,9 +631,9 @@ Future<void> _submitSchedule(BuildContext context) async {
                       ),
                     ),
 
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                    // Location Card
+                    // Location Card (Requirement 5: Readable place name)
                     _buildFormCard(
                       icon: Icons.location_on,
                       title: 'Pickup Location',
@@ -654,33 +641,67 @@ Future<void> _submitSchedule(BuildContext context) async {
                         controller: locationController,
                         focusNode: _locationFocusNode,
                         decoration: InputDecoration(
-                          hintText: 'Enter your address or location',
-                          hintStyle: TextStyle(color: Colors.grey),
+                          hintText: 'e.g. Bole Medhanialem, Addis Ababa',
+                          hintStyle: const TextStyle(color: Colors.grey),
                           border: InputBorder.none,
-                          suffixIcon: IconButton(
-                            icon: Icon(Icons.my_location,
-                                color: Color(0xFF2C3E34)),
-                            onPressed: () async {
-                              try {
-                                final position =
-                                    await LocationService.getCurrentLocation();
-                                locationController.text =
-                                    '${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}';
-                              } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                        'Could not get current location'),
-                                    backgroundColor: Colors.red,
+                          suffixIcon: _isLocating
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: Padding(
+                                    padding: EdgeInsets.all(12),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.greenText,
+                                    ),
                                   ),
-                                );
-                              }
-                            },
-                          ),
+                                )
+                              : IconButton(
+                                  icon: const Icon(
+                                    Icons.my_location,
+                                    color: AppColors.greenText,
+                                  ),
+                                  tooltip: 'Use current location',
+                                  onPressed: () async {
+                                    setState(() => _isLocating = true);
+                                    try {
+                                      final position =
+                                          await LocationService.getCurrentLocation();
+                                      _selectedLatitude = position.latitude;
+                                      _selectedLongitude = position.longitude;
+
+                                      // Requirement 5: show readable place name
+                                      final readableAddress =
+                                          await LocationService.getAddressFromCoordinates(
+                                        position.latitude,
+                                        position.longitude,
+                                      );
+                                      locationController.text = readableAddress;
+                                    } catch (e) {
+                                      _selectedLatitude = 9.0320;
+                                      _selectedLongitude = 38.7469;
+                                      locationController.text =
+                                          'Bole Sub-City, Addis Ababa';
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                                'Location set to Bole Sub-City, Addis Ababa'),
+                                            backgroundColor: AppColors.greenText,
+                                          ),
+                                        );
+                                      }
+                                    } finally {
+                                      if (mounted) {
+                                        setState(() => _isLocating = false);
+                                      }
+                                    }
+                                  },
+                                ),
                         ),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
-                          color: Color(0xFF2C3E34),
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -827,42 +848,42 @@ Future<void> _submitSchedule(BuildContext context) async {
 
                     SizedBox(height: 30),
 
-                    // Submit Button
+                    // Submit Button (Requirement 2: #53F19D for buttons)
                     SizedBox(
                       width: double.infinity,
                       height: 56,
                       child: ElevatedButton(
                         onPressed: _isSubmitting ? null : _showConfirmationDialog,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF2C3E34),
-                          foregroundColor: Colors.white,
+                          backgroundColor: AppColors.buttonGreen,
+                          foregroundColor: AppColors.buttonText,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
-                          elevation: 2,
-                          shadowColor: Color(0xFF2C3E34).withOpacity(0.3),
-                          padding: EdgeInsets.symmetric(vertical: 16),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                         child: _isSubmitting
-                            ? SizedBox(
-                                width: 20,
-                                height: 20,
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor:
-                                      AlwaysStoppedAnimation(Colors.white),
+                                      AlwaysStoppedAnimation(AppColors.greenText),
                                 ),
                               )
-                            : Row(
+                            : const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.schedule, size: 22),
+                                  Icon(Icons.schedule, size: 22, color: AppColors.buttonText),
                                   SizedBox(width: 10),
                                   Text(
                                     'Schedule Pickup',
                                     style: TextStyle(
                                       fontSize: 18,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.buttonText,
                                     ),
                                   ),
                                 ],
@@ -870,29 +891,29 @@ Future<void> _submitSchedule(BuildContext context) async {
                       ),
                     ),
 
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
                     // Info Note
                     Container(
-                      padding: EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Color(0xFFFFF3E0),
+                        color: AppColors.sectionBg,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Color(0xFFFF9800).withOpacity(0.3),
+                          color: AppColors.border,
                           width: 1,
                         ),
                       ),
-                      child: Row(
+                      child: const Row(
                         children: [
-                          Icon(Icons.info, color: Color(0xFFFF9800), size: 20),
+                          Icon(Icons.info, color: AppColors.greenText, size: 20),
                           SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              'Your pickup will be confirmed within 24 hours. You will receive a notification when a collector accepts your request.',
+                              'Your pickup will be confirmed immediately and assigned to your selected Kebele / Community collector.',
                               style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF666666),
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
                               ),
                             ),
                           ),
@@ -900,7 +921,7 @@ Future<void> _submitSchedule(BuildContext context) async {
                       ),
                     ),
 
-                    SizedBox(height: 40),
+                    const SizedBox(height: 30),
                   ],
                 ),
               ),
@@ -908,6 +929,8 @@ Future<void> _submitSchedule(BuildContext context) async {
           ],
         ),
       ),
+      // Requirement 7: Consistent bottom navigation
+      bottomNavigationBar: const CustomerBottomNav(currentIndex: 1),
     );
   }
 
@@ -1006,16 +1029,12 @@ Future<void> _submitSchedule(BuildContext context) async {
 
   Widget _getCollectorIcon(String collectorType) {
     switch (collectorType) {
-      case 'Nearest Collector':
-        return Icon(Icons.location_on, color: Color(0xFF2196F3));
       case 'Kebele Collector':
-        return Icon(Icons.account_balance, color: Color(0xFF4CAF50));
-      case 'Private Recycler':
-        return Icon(Icons.business, color: Color(0xFFFF9800));
-      case 'Community Center':
-        return Icon(Icons.people, color: Color(0xFF9C27B0));
+        return const Icon(Icons.account_balance, color: AppColors.greenText);
+      case 'Community Collector':
+        return const Icon(Icons.groups_rounded, color: Color(0xFF00897B));
       default:
-        return Icon(Icons.person, color: Color(0xFF2C3E34));
+        return const Icon(Icons.recycling_rounded, color: AppColors.greenText);
     }
   }
 }

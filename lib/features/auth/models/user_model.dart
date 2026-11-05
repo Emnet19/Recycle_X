@@ -6,11 +6,19 @@ class UserModel {
   final String? displayName;
   final String? photoUrl;
 
-  /// One of: 'customer', 'collector', 'company', 'admin'
+  /// One of: 'customer', 'kebele_collector', 'community_collector', 'company', 'admin'
   final String role;
 
   final bool emailVerified;
   final DateTime? createdAt;
+
+  /// EcoCoins balance (Requirement 4: 100 upon first registration)
+  final int ecoCoins;
+  final bool initialCoinsAwarded;
+
+  /// Collector specific metadata (Requirement 3)
+  final String? collectorType;
+  final String? zoneOrOrganization;
 
   const UserModel({
     required this.uid,
@@ -20,6 +28,10 @@ class UserModel {
     this.photoUrl,
     this.emailVerified = false,
     this.createdAt,
+    this.ecoCoins = 100,
+    this.initialCoinsAwarded = true,
+    this.collectorType,
+    this.zoneOrOrganization,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
@@ -33,6 +45,10 @@ class UserModel {
       createdAt: map['createdAt'] != null
           ? DateTime.tryParse(map['createdAt'] as String)
           : null,
+      ecoCoins: (map['ecoCoins'] as num?)?.toInt() ?? 100,
+      initialCoinsAwarded: map['initialCoinsAwarded'] as bool? ?? true,
+      collectorType: map['collectorType'] as String?,
+      zoneOrOrganization: map['zoneOrOrganization'] as String?,
     );
   }
 
@@ -45,6 +61,10 @@ class UserModel {
       if (photoUrl != null) 'photoUrl': photoUrl,
       'emailVerified': emailVerified,
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
+      'ecoCoins': ecoCoins,
+      'initialCoinsAwarded': initialCoinsAwarded,
+      if (collectorType != null) 'collectorType': collectorType,
+      if (zoneOrOrganization != null) 'zoneOrOrganization': zoneOrOrganization,
     };
   }
 
@@ -56,6 +76,10 @@ class UserModel {
     String? photoUrl,
     bool? emailVerified,
     DateTime? createdAt,
+    int? ecoCoins,
+    bool? initialCoinsAwarded,
+    String? collectorType,
+    String? zoneOrOrganization,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -65,10 +89,14 @@ class UserModel {
       photoUrl: photoUrl ?? this.photoUrl,
       emailVerified: emailVerified ?? this.emailVerified,
       createdAt: createdAt ?? this.createdAt,
+      ecoCoins: ecoCoins ?? this.ecoCoins,
+      initialCoinsAwarded: initialCoinsAwarded ?? this.initialCoinsAwarded,
+      collectorType: collectorType ?? this.collectorType,
+      zoneOrOrganization: zoneOrOrganization ?? this.zoneOrOrganization,
     );
   }
 
   @override
   String toString() =>
-      'UserModel(uid: $uid, email: $email, role: $role)';
+      'UserModel(uid: $uid, email: $email, role: $role, ecoCoins: $ecoCoins)';
 }

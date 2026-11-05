@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../components/customer_bottom_nav.dart';
 import '../../../auth/providers/auth_provider.dart';
 
 /// Customer home dashboard — entry point after a customer logs in.
-/// Will display: quick actions, recent pickups, eco-stats, nearby collectors.
+/// Displays quick actions, recent pickups, eco-stats, nearby collectors.
 class CustomerHomePage extends StatelessWidget {
   const CustomerHomePage({super.key});
 
@@ -16,6 +17,9 @@ class CustomerHomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -24,7 +28,7 @@ class CustomerHomePage extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppColors.primary,
+                color: AppColors.greenText,
               ),
             ),
             Text(
@@ -38,7 +42,7 @@ class CustomerHomePage extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_outlined),
+            icon: const Icon(Icons.notifications_outlined, color: AppColors.greenText),
             onPressed: () =>
                 Navigator.pushNamed(context, '/notifications'),
           ),
@@ -49,8 +53,8 @@ class CustomerHomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── EcoCoins banner ──────────────────────────────────────
-            _EcoCoinsBanner(),
+            // ── EcoCoins banner (Requirement 4: 100 Initial EcoCoins) ───
+            _EcoCoinsBanner(ecoCoins: auth.appUser?.ecoCoins ?? 100),
 
             const SizedBox(height: 24),
 
@@ -82,13 +86,16 @@ class CustomerHomePage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: const _CustomerBottomNav(currentIndex: 0),
+      bottomNavigationBar: const CustomerBottomNav(currentIndex: 0),
     );
   }
 }
 
 // ─── EcoCoins Banner ─────────────────────────────────────────────────────────
 class _EcoCoinsBanner extends StatelessWidget {
+  final int ecoCoins;
+  const _EcoCoinsBanner({required this.ecoCoins});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -96,39 +103,46 @@ class _EcoCoinsBanner extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryLight],
+          colors: [AppColors.greenText, Color(0xFF139C46)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1A0A8037),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
-      child: const Row(
+      child: Row(
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Your EcoCoins',
                   style: TextStyle(color: Colors.white70, fontSize: 13),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  '0',
-                  style: TextStyle(
+                  '$ecoCoins',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  'Start recycling to earn coins!',
+                const Text(
+                  '100 Welcome EcoCoins active • Earn more by recycling!',
                   style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
           ),
-          Icon(Icons.eco, size: 60, color: Colors.white30),
+          const Icon(Icons.eco, size: 60, color: Colors.white30),
         ],
       ),
     );
@@ -238,41 +252,4 @@ class _RecentPickupsPlaceholder extends StatelessWidget {
   }
 }
 
-// ─── Bottom Nav ───────────────────────────────────────────────────────────────
-class _CustomerBottomNav extends StatelessWidget {
-  final int currentIndex;
-  const _CustomerBottomNav({required this.currentIndex});
 
-  @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: currentIndex,
-      selectedItemColor: AppColors.primary,
-      unselectedItemColor: AppColors.textSecondary,
-      onTap: (i) {
-        switch (i) {
-          case 0:
-            Navigator.pushReplacementNamed(context, '/customer/home');
-            break;
-          case 1:
-            Navigator.pushReplacementNamed(context, '/schedule-pickup');
-            break;
-          case 2:
-            Navigator.pushReplacementNamed(context, '/wallet');
-            break;
-          case 3:
-            Navigator.pushReplacementNamed(context, '/profile');
-            break;
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today), label: 'Schedule'),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet), label: 'Wallet'),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-      ],
-    );
-  }
-}

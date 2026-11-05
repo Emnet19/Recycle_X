@@ -8,7 +8,9 @@ class AppStrings {
 
   // Roles
   static const String roleCustomer = 'customer';
-  static const String roleCollector = 'collector';
+  static const String roleKebeleCollector = 'kebele_collector';
+  static const String roleCommunityCollector = 'community_collector';
+  static const String roleCollector = 'kebele_collector'; // alias for backwards compatibility
   static const String roleCompany = 'company';
   static const String roleAdmin = 'admin';
 

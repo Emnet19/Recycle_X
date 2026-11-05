@@ -6,7 +6,8 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/customer/presentation/pages/customer_home_page.dart';
 import '../../features/customer/presentation/pages/map_page.dart';
-import '../../features/collector/presentation/pages/collector_home_page.dart';
+import '../../features/collector/presentation/pages/kebele_collector_home_page.dart';
+import '../../features/collector/presentation/pages/community_collector_home_page.dart';
 import '../../features/company/presentation/pages/company_home_page.dart';
 import '../../features/collection/presentation/pages/schedule_pickup_page.dart';
 import '../../features/collection/presentation/pages/emergency_pickup.dart';
@@ -35,6 +36,8 @@ class Routes {
 
   // Collector
   static const String collectorHome = '/collector/home';
+  static const String kebeleCollectorHome = '/kebele-collector/home';
+  static const String communityCollectorHome = '/community-collector/home';
 
   // Company
   static const String companyHome = '/company/home';
@@ -50,10 +53,11 @@ class Routes {
 /// Route resolution:
 ///   /  (splash) → onboarding → login / register
 ///   After login:
-///     customer  → /customer/home
-///     collector → /collector/home
-///     company   → /company/home
-///     admin     → /admin/dashboard (future)
+///     customer             → /customer/home
+///     kebele_collector     → /kebele-collector/home
+///     community_collector  → /community-collector/home
+///     company              → /company/home
+///     admin                → /admin/dashboard (future)
 class AppRouter {
   AppRouter._();
 
@@ -77,8 +81,14 @@ class AppRouter {
       case Routes.customerHome:
         return _build(const CustomerHomePage());
 
+      case Routes.kebeleCollectorHome:
+        return _build(const KebeleCollectorHomePage());
+
+      case Routes.communityCollectorHome:
+        return _build(const CommunityCollectorHomePage());
+
       case Routes.collectorHome:
-        return _build(const CollectorHomePage());
+        return _build(const KebeleCollectorHomePage());
 
       case Routes.companyHome:
         return _build(const CompanyHomePage());
@@ -116,8 +126,12 @@ class AppRouter {
   /// Role-aware redirect: call this after a successful login.
   static String homeRouteForRole(String role) {
     switch (role) {
+      case AppStrings.roleKebeleCollector:
+        return Routes.kebeleCollectorHome;
+      case AppStrings.roleCommunityCollector:
+        return Routes.communityCollectorHome;
       case AppStrings.roleCollector:
-        return Routes.collectorHome;
+        return Routes.kebeleCollectorHome;
       case AppStrings.roleCompany:
         return Routes.companyHome;
       case AppStrings.roleAdmin:

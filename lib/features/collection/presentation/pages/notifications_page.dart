@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/language_service.dart';
 
 class NotificationsPage extends StatefulWidget {
@@ -36,23 +37,30 @@ class _NotificationsPageState extends State<NotificationsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(LanguageService.t('notifications')),
-        backgroundColor: Colors.green[700],
-        foregroundColor: Colors.white,
+        title: Text(
+          LanguageService.t('notifications'),
+          style: const TextStyle(
+            color: AppColors.greenText,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.greenText,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               LanguageService.t('notificationSettings'),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.green[800],
+                color: AppColors.greenText,
               ),
             ),
             
@@ -151,12 +159,20 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   ElevatedButton(
                     onPressed: _sendTestNotification,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[700],
+                      backgroundColor: AppColors.buttonGreen,
+                      foregroundColor: AppColors.greenText,
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: Text(LanguageService.t('sendTest')),
+                    child: Text(
+                      LanguageService.t('sendTest'),
+                      style: const TextStyle(
+                        color: AppColors.greenText,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
               ),

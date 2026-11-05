@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 class NotificationsPage extends StatelessWidget {
   const NotificationsPage({super.key});
@@ -6,24 +7,36 @@ class NotificationsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E2B24),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Notifications'),
-        backgroundColor: const Color(0xFF1E2B24),
-        foregroundColor: Colors.white,
+        title: const Text(
+          'Notifications',
+          style: TextStyle(
+            color: AppColors.greenText,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.greenText,
+        elevation: 0,
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: const [
           NotificationCard(
+            title: 'Welcome Bonus Credited',
+            message: '100 EcoCoins have been deposited into your wallet for joining RecycleX.',
+            icon: Icons.celebration_rounded,
+          ),
+          NotificationCard(
             title: 'Pickup Scheduled',
-            message: 'Your waste pickup is confirmed.',
-            icon: Icons.check_circle,
+            message: 'Your waste pickup request is confirmed and assigned to your local collector.',
+            icon: Icons.check_circle_rounded,
           ),
           NotificationCard(
             title: 'Reminder',
-            message: 'Your pickup is scheduled for tomorrow.',
-            icon: Icons.notifications_active,
+            message: 'Your scheduled recycling pickup is planned for tomorrow morning.',
+            icon: Icons.notifications_active_rounded,
           ),
         ],
       ),
@@ -46,18 +59,43 @@ class NotificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: const Color(0xFF2C3E34),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: Colors.white,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
       margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: Icon(icon, color: const Color(0xFFD4AF37)),
-        title: Text(
-          title,
-          style: const TextStyle(color: Colors.white),
-        ),
-        subtitle: Text(
-          message,
-          style: const TextStyle(color: Colors.white70),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.buttonGreen.withValues(alpha: 0.25),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: AppColors.greenText, size: 22),
+          ),
+          title: Text(
+            title,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              message,
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 13,
+                height: 1.3,
+              ),
+            ),
+          ),
         ),
       ),
     );
