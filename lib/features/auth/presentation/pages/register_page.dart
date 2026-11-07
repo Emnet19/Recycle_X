@@ -70,7 +70,7 @@ class _RegisterPageState extends State<RegisterPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Welcome to RecycleX! 100 EcoCoins added to your wallet.'),
-          backgroundColor: Color(0xFF2E8540),
+          backgroundColor: AppColors.primary,
           duration: Duration(seconds: 4),
         ),
       );
@@ -97,7 +97,7 @@ class _RegisterPageState extends State<RegisterPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF2E8540), size: 24),
+          icon: const Icon(Icons.arrow_back, color: AppColors.primary, size: 24),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -115,7 +115,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF2E7D32),
+                    color: AppColors.primary,
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -147,14 +147,14 @@ class _RegisterPageState extends State<RegisterPage> {
                     hintText: 'Enter your full name',
                     hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                    suffixIcon: const Icon(Icons.person, color: Color(0xFF6B9E78), size: 20),
+                    suffixIcon: const Icon(Icons.person, color: AppColors.primaryLight, size: 20),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFF2E8540), width: 1.5),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
                     ),
                   ),
                   validator: (v) => (v == null || v.trim().isEmpty)
@@ -182,14 +182,14 @@ class _RegisterPageState extends State<RegisterPage> {
                     hintText: 'Enter your email',
                     hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                    suffixIcon: const Icon(Icons.alternate_email, color: Color(0xFF6B9E78), size: 20),
+                    suffixIcon: const Icon(Icons.alternate_email, color: AppColors.primaryLight, size: 20),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFF2E8540), width: 1.5),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
                     ),
                   ),
                   validator: (v) => (v == null || !v.contains('@'))
@@ -220,7 +220,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword ? Icons.lock : Icons.lock_open,
-                        color: const Color(0xFF6B9E78),
+                        color: AppColors.primaryLight,
                         size: 20,
                       ),
                       onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
@@ -231,7 +231,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFF2E8540), width: 1.5),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
                     ),
                   ),
                   validator: (v) => (v == null || v.length < 6)
@@ -262,7 +262,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscureConfirm ? Icons.lock : Icons.lock_open,
-                        color: const Color(0xFF6B9E78),
+                        color: AppColors.primaryLight,
                         size: 20,
                       ),
                       onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
@@ -273,7 +273,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFF2E8540), width: 1.5),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
                     ),
                   ),
                   validator: (v) => (v != _passwordController.text)
@@ -299,10 +299,10 @@ class _RegisterPageState extends State<RegisterPage> {
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF2E8540),
+                            color: AppColors.primary,
                           ),
                         ),
-                        const Icon(Icons.arrow_drop_down, color: Color(0xFF2E8540), size: 18),
+                        const Icon(Icons.arrow_drop_down, color: AppColors.primary, size: 18),
                       ],
                     ),
                   ),
@@ -343,10 +343,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   child: ElevatedButton(
                     onPressed: auth.loading ? null : () => _register(auth),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E8540),
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       elevation: 4,
-                      shadowColor: const Color(0xFF2E8540).withValues(alpha: 0.3),
+                      shadowColor: AppColors.primary.withValues(alpha: 0.3),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -391,7 +391,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF2E8540),
+                          color: AppColors.primary,
                         ),
                       ),
                     ),
@@ -418,7 +418,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         width: 44,
                         height: 44,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF2E8540),
+                          color: AppColors.primary,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -446,7 +446,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF2E8540),
+                                color: AppColors.primary,
                                 letterSpacing: 0.3,
                               ),
                             ),
@@ -455,7 +455,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       const Icon(
                         Icons.chevron_right,
-                        color: Color(0xFF2E8540),
+                        color: AppColors.primary,
                         size: 22,
                       ),
                     ],
@@ -476,7 +476,7 @@ class _RegisterPageState extends State<RegisterPage> {
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
-      selectedColor: const Color(0xFF2E8540),
+      selectedColor: AppColors.primary,
       labelStyle: TextStyle(
         fontSize: 11,
         color: isSelected ? Colors.white : const Color(0xFF1E293B),

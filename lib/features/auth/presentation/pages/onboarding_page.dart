@@ -75,15 +75,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
             // ── Skip button ──────────────────────────────────────────
             Positioned(
-              top: 16,
-              right: 20,
+              top: 24,
+              right: 24,
               child: TextButton(
                 onPressed: _goToLogin,
                 child: const Text(
                   AppStrings.skip,
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: AppColors.primary,
                     fontSize: 15,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -91,7 +92,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
             // ── Bottom nav (dots + button) ───────────────────────────
             Positioned(
-              bottom: 30,
+              bottom: 40,
               left: 24,
               right: 24,
               child: Column(
@@ -115,17 +116,30 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
                   // Next / Get Started button
                   SizedBox(
                     width: double.infinity,
+                    height: 52,
                     child: ElevatedButton(
                       onPressed: _nextPage,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                       child: Text(
                         _currentPage == _slides.length - 1
                             ? AppStrings.getStarted
                             : 'Next',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
@@ -185,7 +199,7 @@ class _SlideView extends StatelessWidget {
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 100), // space for bottom buttons
+          const SizedBox(height: 120), // space for bottom buttons
         ],
       ),
     );

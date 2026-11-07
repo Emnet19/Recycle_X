@@ -38,8 +38,8 @@ class _SchedulePickupPageState extends State<SchedulePickupPage> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            primaryColor: Color(0xFF2C3E34),
-            colorScheme: ColorScheme.light(primary: Color(0xFF2C3E34)),
+            primaryColor: AppColors.primary,
+            colorScheme: ColorScheme.light(primary: AppColors.primary),
             buttonTheme: ButtonThemeData(textTheme: ButtonTextTheme.primary),
           ),
           child: child!,

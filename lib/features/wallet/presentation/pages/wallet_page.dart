@@ -38,8 +38,8 @@ class WalletPage extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.greenText, Color(0xFF145A32)],
+                gradient: LinearGradient(
+                  colors: [AppColors.primary, AppColors.primary.withBlue(50)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),

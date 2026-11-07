@@ -102,8 +102,8 @@ class _EcoCoinsBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.greenText, Color(0xFF139C46)],
+        gradient: LinearGradient(
+          colors: [AppColors.primary, AppColors.primary.withBlue(70)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

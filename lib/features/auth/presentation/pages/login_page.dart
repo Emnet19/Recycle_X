@@ -112,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
                     style: TextStyle(
                       fontSize: 34,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF2E7D32),
+                      color: AppColors.primary,
                       letterSpacing: -0.5,
                     ),
                   ),
@@ -142,7 +142,7 @@ class _LoginPageState extends State<LoginPage> {
                           offset: const Offset(0, 8),
                         ),
                         BoxShadow(
-                          color: const Color(0xFF2E7D32).withValues(alpha: 0.03),
+                          color: AppColors.primary.withValues(alpha: 0.03),
                           blurRadius: 16,
                           offset: const Offset(0, 2),
                         ),
@@ -185,7 +185,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 1.5),
+                              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
                             ),
                             errorBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -232,7 +232,7 @@ class _LoginPageState extends State<LoginPage> {
                                 _obscurePassword
                                     ? Icons.visibility_outlined
                                     : Icons.visibility_off_outlined,
-                                color: const Color(0xFF4A7C59),
+                                color: AppColors.primary,
                                 size: 20,
                               ),
                               onPressed: () => setState(
@@ -244,7 +244,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 1.5),
+                              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
                             ),
                             errorBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -269,7 +269,7 @@ class _LoginPageState extends State<LoginPage> {
                           child: ElevatedButton(
                             onPressed: auth.loading ? null : () => _signInWithEmail(auth),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF2E8540),
+                              backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
@@ -310,7 +310,7 @@ class _LoginPageState extends State<LoginPage> {
                             child: const Text(
                               'Forgot Password?',
                               style: TextStyle(
-                                color: Color(0xFF2E8540),
+                                color: AppColors.primary,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -381,7 +381,7 @@ class _LoginPageState extends State<LoginPage> {
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFE8F5E9),
-                              foregroundColor: const Color(0xFF2E8540),
+                              foregroundColor: AppColors.primary,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
@@ -394,7 +394,7 @@ class _LoginPageState extends State<LoginPage> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF2E8540),
+                                color: AppColors.primary,
                               ),
                             ),
                           ),
@@ -418,7 +418,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.flash_on, size: 14, color: Color(0xFF2E8540)),
+                          const Icon(Icons.flash_on, size: 14, color: AppColors.primary),
                           const SizedBox(width: 4),
                           Text(
                             _showDemoAccounts ? 'Hide Quick Demo Logins' : '1-Click Demo Logins',

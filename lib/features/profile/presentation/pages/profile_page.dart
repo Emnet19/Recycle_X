@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../components/customer_bottom_nav.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../collection/presentation/pages/edit_profile.dart';
 
@@ -35,7 +36,7 @@ class _ProfilePageState extends State<ProfilePage> {
               width: double.infinity,
               padding: const EdgeInsets.only(top: 48, bottom: 28, left: 20, right: 20),
               decoration: const BoxDecoration(
-                color: Color(0xFF388E3C),
+                color: AppColors.primary,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(32),
                   bottomRight: Radius.circular(32),
@@ -124,7 +125,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             child: const Icon(
                               Icons.edit,
-                              color: Color(0xFF2E7D32),
+                              color: AppColors.primary,
                               size: 14,
                             ),
                           ),
@@ -223,7 +224,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF00C853),
+                            color: AppColors.primary,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
@@ -259,7 +260,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF00C853),
+                            color: AppColors.primary,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Text(
@@ -374,11 +375,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
-                                    color: Color(0xFF2E7D32),
+                                    color: AppColors.primary,
                                   ),
                                 ),
                                 SizedBox(width: 4),
-                                Icon(Icons.arrow_drop_down, color: Color(0xFF2E7D32), size: 16),
+                                Icon(Icons.arrow_drop_down, color: AppColors.primary, size: 16),
                               ],
                             ),
                           ),
@@ -389,7 +390,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                           child: Row(
                             children: [
-                              const Icon(Icons.nightlight_round, color: Color(0xFF2E7D32), size: 22),
+                              const Icon(Icons.nightlight_round, color: AppColors.primary, size: 22),
                               const SizedBox(width: 14),
                               const Expanded(
                                 child: Text(
@@ -403,7 +404,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                               Switch(
                                 value: _darkMode,
-                                activeColor: const Color(0xFF2E7D32),
+                                activeColor: AppColors.primary,
                                 onChanged: (v) => setState(() => _darkMode = v),
                               ),
                             ],
@@ -510,7 +511,7 @@ class _ProfilePageState extends State<ProfilePage> {
             color: Color(0xFFE8F5E9),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: const Color(0xFF2E7D32), size: 18),
+          child: Icon(icon, color: AppColors.primary, size: 18),
         ),
         const SizedBox(height: 6),
         Text(
@@ -527,7 +528,7 @@ class _ProfilePageState extends State<ProfilePage> {
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w800,
-            color: Color(0xFF2E7D32),
+            color: AppColors.primary,
           ),
         ),
       ],
@@ -547,7 +548,7 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFF2E7D32), size: 22),
+            Icon(icon, color: AppColors.primary, size: 22),
             const SizedBox(width: 14),
             Expanded(
               child: Text(
