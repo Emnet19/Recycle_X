@@ -63,39 +63,53 @@ class _OnboardingPageState extends State<OnboardingPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            // ── Page content ─────────────────────────────────────────
-            PageView.builder(
-              controller: _pageController,
-              itemCount: _slides.length,
-              onPageChanged: (i) => setState(() => _currentPage = i),
-              itemBuilder: (ctx, i) => _SlideView(slide: _slides[i]),
-            ),
-
-            // ── Skip button ──────────────────────────────────────────
-            Positioned(
-              top: 24,
-              right: 24,
-              child: TextButton(
-                onPressed: _goToLogin,
-                child: const Text(
-                  AppStrings.skip,
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
+            // ── Top bar (Skip button) ────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: SizedBox(
+                height: 44,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Visibility(
+                      visible: _currentPage < _slides.length - 1,
+                      maintainSize: true,
+                      maintainAnimation: true,
+                      maintainState: true,
+                      child: TextButton(
+                        onPressed: _goToLogin,
+                        child: const Text(
+                          AppStrings.skip,
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
 
+            // ── PageView (Slide content) ─────────────────────────────
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: _slides.length,
+                onPageChanged: (i) => setState(() => _currentPage = i),
+                itemBuilder: (ctx, i) => _SlideView(slide: _slides[i]),
+              ),
+            ),
+
             // ── Bottom nav (dots + button) ───────────────────────────
-            Positioned(
-              bottom: 40,
-              left: 24,
-              right: 24,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Dot indicators
                   Row(
@@ -105,7 +119,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       (i) => AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: _currentPage == i ? 20 : 8,
+                        width: _currentPage == i ? 22 : 8,
                         height: 8,
                         decoration: BoxDecoration(
                           color: _currentPage == i
@@ -176,20 +190,34 @@ class _SlideView extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          const SizedBox(height: 12),
           Text(
             slide.title,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 32,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
               color: AppColors.primary,
+              height: 1.25,
             ),
           ),
-          const SizedBox(height: 20),
-          Image.asset(slide.image, width: 220, height: 300),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxHeight: 220,
+                  maxWidth: 240,
+                ),
+                child: Image.asset(
+                  slide.image,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           Text(
             slide.subtitle,
             textAlign: TextAlign.center,
@@ -199,7 +227,7 @@ class _SlideView extends StatelessWidget {
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 120), // space for bottom buttons
+          const SizedBox(height: 16),
         ],
       ),
     );

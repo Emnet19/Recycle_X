@@ -5,6 +5,7 @@ class UserModel {
   final String email;
   final String? displayName;
   final String? photoUrl;
+  final String? phoneNumber;
 
   /// One of: 'customer', 'kebele_collector', 'community_collector', 'company', 'admin'
   final String role;
@@ -26,6 +27,7 @@ class UserModel {
     required this.role,
     this.displayName,
     this.photoUrl,
+    this.phoneNumber,
     this.emailVerified = false,
     this.createdAt,
     this.ecoCoins = 100,
@@ -41,6 +43,7 @@ class UserModel {
       role: map['role'] as String? ?? 'customer',
       displayName: map['displayName'] as String?,
       photoUrl: map['photoUrl'] as String?,
+      phoneNumber: map['phoneNumber'] as String?,
       emailVerified: map['emailVerified'] as bool? ?? false,
       createdAt: map['createdAt'] != null
           ? DateTime.tryParse(map['createdAt'] as String)
@@ -59,6 +62,7 @@ class UserModel {
       'role': role,
       if (displayName != null) 'displayName': displayName,
       if (photoUrl != null) 'photoUrl': photoUrl,
+      if (phoneNumber != null) 'phoneNumber': phoneNumber,
       'emailVerified': emailVerified,
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
       'ecoCoins': ecoCoins,
@@ -74,6 +78,7 @@ class UserModel {
     String? role,
     String? displayName,
     String? photoUrl,
+    String? phoneNumber,
     bool? emailVerified,
     DateTime? createdAt,
     int? ecoCoins,
@@ -87,6 +92,7 @@ class UserModel {
       role: role ?? this.role,
       displayName: displayName ?? this.displayName,
       photoUrl: photoUrl ?? this.photoUrl,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
       emailVerified: emailVerified ?? this.emailVerified,
       createdAt: createdAt ?? this.createdAt,
       ecoCoins: ecoCoins ?? this.ecoCoins,

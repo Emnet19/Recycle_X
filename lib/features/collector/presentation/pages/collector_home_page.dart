@@ -103,7 +103,7 @@ class _EarningsCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppColors.collectorRole, Color(0xFF1976D2)],
+          colors: [AppColors.primary, AppColors.success],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

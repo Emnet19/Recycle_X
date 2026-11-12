@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../widgets/google_sign_in_button.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/routing/app_router.dart';
@@ -17,9 +18,11 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
   final _zoneOrOrgController = TextEditingController();
+  String _selectedCountryCode = '+251';
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
 
@@ -31,6 +34,7 @@ class _RegisterPageState extends State<RegisterPage> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
     _zoneOrOrgController.dispose();
@@ -53,6 +57,8 @@ class _RegisterPageState extends State<RegisterPage> {
       collectorType = 'Community Collector';
     }
 
+    final fullPhoneNumber = '$_selectedCountryCode ${_phoneController.text.trim()}';
+
     final success = await auth.registerWithEmail(
       email: _emailController.text.trim(),
       password: _passwordController.text,
@@ -60,6 +66,7 @@ class _RegisterPageState extends State<RegisterPage> {
       displayName: _nameController.text.trim().isNotEmpty
           ? _nameController.text.trim()
           : null,
+      phoneNumber: fullPhoneNumber,
       collectorType: collectorType,
       zoneOrOrganization: _zoneOrOrgController.text.trim().isNotEmpty
           ? _zoneOrOrgController.text.trim()

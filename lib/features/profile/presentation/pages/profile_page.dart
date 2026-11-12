@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../components/customer_bottom_nav.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/routing/app_router.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../collection/presentation/pages/edit_profile.dart';
 
@@ -27,14 +29,18 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FBFA),
-      bottomNavigationBar: const CustomerBottomNav(currentIndex: 3),
+      bottomNavigationBar: user?.role == AppStrings.roleKebeleCollector ||
+              user?.role == AppStrings.roleCommunityCollector
+          ? null
+          : const CustomerBottomNav(currentIndex: 3),
       body: SingleChildScrollView(
         child: Column(
           children: [
             // ── Top Curved Green Header Block ────────────────────────────
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.only(top: 48, bottom: 28, left: 20, right: 20),
+              padding: const EdgeInsets.only(
+                  top: 48, bottom: 28, left: 20, right: 20),
               decoration: const BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: BorderRadius.only(
@@ -49,12 +55,19 @@ class _ProfilePageState extends State<ProfilePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.chevron_left, color: Colors.white, size: 28),
+                        icon: const Icon(Icons.chevron_left,
+                            color: Colors.white, size: 28),
                         onPressed: () {
                           if (Navigator.canPop(context)) {
                             Navigator.pop(context);
                           } else {
-                            Navigator.pushReplacementNamed(context, '/customer/home');
+                            final user = auth.appUser;
+                            Navigator.pushReplacementNamed(
+                              context,
+                              user != null
+                                  ? AppRouter.homeRouteForRole(user.role)
+                                  : '/login',
+                            );
                           }
                         },
                       ),
@@ -67,11 +80,13 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.settings, color: Colors.white, size: 22),
+                        icon: const Icon(Icons.settings,
+                            color: Colors.white, size: 22),
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const EditProfilePage()),
+                            MaterialPageRoute(
+                                builder: (_) => const EditProfilePage()),
                           );
                         },
                       ),
@@ -107,7 +122,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const EditProfilePage()),
+                              MaterialPageRoute(
+                                  builder: (_) => const EditProfilePage()),
                             );
                           },
                           child: Container(
@@ -171,7 +187,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   // ── Stats Summary Card ──────────────────────────────────
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 16, horizontal: 12),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
@@ -191,13 +208,19 @@ class _ProfilePageState extends State<ProfilePage> {
                           label: 'RECYCLED',
                           value: '150kg',
                         ),
-                        Container(height: 38, width: 1, color: const Color(0xFFE2E8F0)),
+                        Container(
+                            height: 38,
+                            width: 1,
+                            color: const Color(0xFFE2E8F0)),
                         _buildStatColumn(
                           icon: Icons.local_shipping,
                           label: 'PICKUPS',
                           value: '24',
                         ),
-                        Container(height: 38, width: 1, color: const Color(0xFFE2E8F0)),
+                        Container(
+                            height: 38,
+                            width: 1,
+                            color: const Color(0xFFE2E8F0)),
                         _buildStatColumn(
                           icon: Icons.layers,
                           label: 'ECOCOINS',
@@ -212,7 +235,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   // ── Eco Champion Banner Card ────────────────────────────
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF0FDF4),
                       borderRadius: BorderRadius.circular(20),
@@ -258,7 +282,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 6),
                           decoration: BoxDecoration(
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(20),
@@ -310,11 +335,16 @@ class _ProfilePageState extends State<ProfilePage> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const EditProfilePage()),
+                              MaterialPageRoute(
+                                  builder: (_) => const EditProfilePage()),
                             );
                           },
                         ),
-                        const Divider(height: 1, indent: 48, endIndent: 16, color: Color(0xFFF1F5F9)),
+                        const Divider(
+                            height: 1,
+                            indent: 48,
+                            endIndent: 16,
+                            color: Color(0xFFF1F5F9)),
                         _buildMenuRow(
                           icon: Icons.security,
                           title: 'Privacy & Security',
@@ -355,14 +385,20 @@ class _ProfilePageState extends State<ProfilePage> {
                         _buildMenuRow(
                           icon: Icons.notifications,
                           title: 'Notifications',
-                          onTap: () => Navigator.pushNamed(context, '/notifications'),
+                          onTap: () =>
+                              Navigator.pushNamed(context, '/notifications'),
                         ),
-                        const Divider(height: 1, indent: 48, endIndent: 16, color: Color(0xFFF1F5F9)),
+                        const Divider(
+                            height: 1,
+                            indent: 48,
+                            endIndent: 16,
+                            color: Color(0xFFF1F5F9)),
                         _buildMenuRow(
                           icon: Icons.language,
                           title: 'Language',
                           trailing: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
                               color: const Color(0xFFE8F5E9),
                               borderRadius: BorderRadius.circular(14),
@@ -379,18 +415,25 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                 ),
                                 SizedBox(width: 4),
-                                Icon(Icons.arrow_drop_down, color: AppColors.primary, size: 16),
+                                Icon(Icons.arrow_drop_down,
+                                    color: AppColors.primary, size: 16),
                               ],
                             ),
                           ),
                           onTap: () {},
                         ),
-                        const Divider(height: 1, indent: 48, endIndent: 16, color: Color(0xFFF1F5F9)),
+                        const Divider(
+                            height: 1,
+                            indent: 48,
+                            endIndent: 16,
+                            color: Color(0xFFF1F5F9)),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 6),
                           child: Row(
                             children: [
-                              const Icon(Icons.nightlight_round, color: AppColors.primary, size: 22),
+                              const Icon(Icons.nightlight_round,
+                                  color: AppColors.primary, size: 22),
                               const SizedBox(width: 14),
                               const Expanded(
                                 child: Text(
@@ -404,7 +447,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                               Switch(
                                 value: _darkMode,
-                                activeColor: AppColors.primary,
+                                activeThumbColor: AppColors.primary,
                                 onChanged: (v) => setState(() => _darkMode = v),
                               ),
                             ],
@@ -423,7 +466,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.white,
-                        side: const BorderSide(color: Color(0xFFFFCDD2), width: 1.2),
+                        side: const BorderSide(
+                            color: Color(0xFFFFCDD2), width: 1.2),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),
@@ -437,7 +481,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.logout, color: Color(0xFFEF4444), size: 18),
+                          Icon(Icons.logout,
+                              color: Color(0xFFEF4444), size: 18),
                           SizedBox(width: 8),
                           Text(
                             'Logout',

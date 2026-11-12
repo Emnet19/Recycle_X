@@ -189,6 +189,7 @@ class AuthService {
     required String password,
     String role = AppStrings.roleCustomer,
     String? displayName,
+    String? phoneNumber,
     String? collectorType,
     String? zoneOrOrganization,
   }) async {
@@ -209,6 +210,7 @@ class AuthService {
       uid: 'user_${DateTime.now().millisecondsSinceEpoch}',
       email: normalizedEmail,
       displayName: displayName ?? normalizedEmail.split('@').first,
+      phoneNumber: phoneNumber,
       role: role,
       emailVerified: true,
       createdAt: DateTime.now(),
@@ -223,6 +225,7 @@ class AuthService {
       email: normalizedEmail,
       password: password,
       displayName: user.displayName ?? '',
+      phoneNumber: phoneNumber,
       role: role,
       ecoCoins: initialEcoCoins,
       initialCoinsAwarded: initialCoinsAwarded,
@@ -280,6 +283,7 @@ class _LocalUserRecord {
   final String email;
   final String password;
   final String displayName;
+  final String? phoneNumber;
   final String role;
   final int ecoCoins;
   final bool initialCoinsAwarded;
@@ -291,6 +295,7 @@ class _LocalUserRecord {
     required this.email,
     required this.password,
     required this.displayName,
+    this.phoneNumber,
     required this.role,
     this.ecoCoins = 100,
     this.initialCoinsAwarded = true,
@@ -303,6 +308,7 @@ class _LocalUserRecord {
       uid: uid,
       email: email,
       displayName: displayName,
+      phoneNumber: phoneNumber,
       role: role,
       emailVerified: true,
       createdAt: DateTime.now(),

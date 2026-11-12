@@ -4,16 +4,17 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // Green color theme (Requirement 2)
-  /// Primary green text and brand identity: #0A8037
+  // Green color theme
+  /// Primary green text and brand identity: #0A8037 (Standard Login button green)
   static const Color greenText = Color(0xFF0A8037);
   static const Color primary = Color(0xFF0A8037);
 
-  /// Vibrant green for all buttons: #53F19D
-  static const Color buttonGreen = Color(0xFF53F19D);
-  static const Color buttonText = Color(0xFF0A8037);
-  static const Color primaryLight = Color(0xFF53F19D);
+  /// Standard green for buttons: #0A8037 (matches Login button)
+  static const Color buttonGreen = Color(0xFF0A8037);
+  static const Color buttonText = Colors.white;
+  static const Color primaryLight = Color(0xFF0A8037);
   static const Color primaryLighter = Color(0xFFA5D6A7);
+  static const Color primaryTint = Color(0xFFE8F5E9);
 
   // Accent / EcoCoin gold
   static const Color accent = Color(0xFFFFC107);
