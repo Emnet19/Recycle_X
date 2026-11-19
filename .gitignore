@@ -110,6 +110,69 @@ coverage/
 # Symbols
 app.*.symbols
 
+# ==============================================================================
+# Security & Sensitive Frontend Files (RecycleX)
+# ==============================================================================
+
+# Environment variable files and client secret configs
+.env
+.env.*
+*.env
+env.json
+secrets.json
+secrets.dart
+**/secrets/**
+**/api_keys.dart
+**/api_keys.json
+
+# Firebase & Google Services sensitive credentials
+**/android/app/google-services*.json
+**/android/**/google-services*.json
+**/ios/**/GoogleService-Info.plist
+**/macos/**/GoogleService-Info.plist
+*firebase-adminsdk*.json
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
+# Android keystores, keys & signing configs
+*.keystore
+*.jks
+*.pepk
+**/key.properties
+**/android/key.properties
+**/android/local.properties
+
+# iOS / macOS certificates, keys & provisioning profiles
+*.cer
+*.crt
+*.p12
+*.p8
+*.pem
+*.key
+*.mobileprovision
+*.provisionprofile
+**/ExportOptions.plist
+
+# IDE & Editor files (prevent leaking tokens, system paths & device state)
+.idea/
+.idea/*
+*.iml
+.vscode/
+.vscode/*
+*.suo
+*.user
+*.userosv
+
+# Operating System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
 # Exceptions to above rules.
 !**/ios/**/default.mode1v3
 !**/ios/**/default.mode2v3
